@@ -26,9 +26,10 @@ public:
     }
 
     friend std::ostream& operator<<(std::ostream& os, const Vector2D& v) {
-        os << "(" << v.x << ", " << v.y << ")";
+        os << "(" << v.getX() << ", " << v.getY() << ")";
         return os;
     }
+
 };
 
 #endif //OOP_VECTOR2D_H

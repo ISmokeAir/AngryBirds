@@ -43,9 +43,13 @@ public:
 
     // Operator << pentru afișare frumoasă
     friend std::ostream& operator<<(std::ostream& os, const Bird& b) {
-        os << "Bird[" << b.nume << ", putere=" << b.putere << ", poz=" << b.pozitie << "]";
+        os << "Bird[" << b.nume
+           << ", putere=" << b.getPutere()
+           << ", poz=" << b.pozitie << "]";
         return os;
     }
+
+
 };
 
 
