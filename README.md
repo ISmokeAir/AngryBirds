@@ -1,6 +1,8 @@
-# Nu primesc notă pentru că nu am pus titlu și descriere
+# Angry Birds
 
-### Folosiți template-ul corespunzător grupei voastre!
+### Acest proiect reprezintă o implementare simplificată a jocului Angry Birds realizată în C++, rulată în terminal, cu accent pe programarea orientată pe obiecte.
+
+Jocul modelează păsări, ținte și o scenă de joc. Fiecare pasăre are putere și poziție, iar fiecare țintă are viață și poate fi distrusă. Jucătorul alege ce pasăre trage și ce țintă atacă, iar programul simulează lovitura, calculează distanța și determină dacă ținta este distrusă. Jocul se încheie atunci când toate țintele sunt eliminate.
 
 | Laborant  | Link template                                |
 |-----------|----------------------------------------------|

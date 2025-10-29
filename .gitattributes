@@ -1,1 +1,24 @@
-ext/** linguist-vendored
+# Normalize text files to LF
+* text=auto eol=lf
+
+# Make sure GitHub linguist detectează corect codul
+*.cpp linguist-language=C++
+*.h   linguist-language=C++
+
+# Nu include fișiere generate automat în statistici
+build/* linguist-generated
+build/** linguist-generated
+install_dir/* linguist-generated
+
+# Exclud executabilele și scripturile de build din linguist
+*.sh linguist-generated
+*.exe linguist-generated
+*.out linguist-generated
+
+# Fișiere de date (nu sunt cod)
+*.txt linguist-vendored
+
+# Evităm normalizearea imaginilor
+*.png binary
+*.jpg binary
+*.jpeg binary
