@@ -54,7 +54,7 @@ static bool readYesNo(std::istream& in, bool& yes) {
 }
 
 int main() {
-    std::ifstream fin("tastatura.txt");
+    std::ifstream fin("astatura.txt");
 
     bool folosescFisier = false;
     if (fin.good()) {

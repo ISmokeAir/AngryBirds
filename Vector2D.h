@@ -5,7 +5,7 @@
 #ifndef OOP_VECTOR2D_H
 #define OOP_VECTOR2D_H
 
-#pragma once
+//#pragma once
 #include <cmath>   // necesar pentru sqrt()
 #include <ostream>
 
@@ -15,7 +15,7 @@ private:
 
 public:
     // Constructor explicit: evită conversii implicite gen Vector2D v = 5;
-    explicit Vector2D(double x = 0, double y = 0) : x(x), y(y) {}
+    Vector2D(double x = 0, double y = 0) : x(x), y(y) {}
 
     [[nodiscard]] double getX() const { return x; }
     [[nodiscard]] double getY() const { return y; }
