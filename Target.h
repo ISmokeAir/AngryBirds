@@ -32,6 +32,9 @@ public:
     [[nodiscard]] bool esteDistrus() const { return viata <= 0; }
     [[nodiscard]] const Vector2D& getPozitie() const { return pozitie; }
 
+    ///Added get function for `viata` attribute
+    [[nodiscard]] int getViata() const { return viata;}
+
     friend std::ostream& operator<<(std::ostream& os, const Target& t) {
         os << "Target[viata=" << t.viata << ", poz=" << t.pozitie << "]";
         return os;

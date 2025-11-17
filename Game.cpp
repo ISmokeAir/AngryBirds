@@ -6,11 +6,19 @@ void Game::adaugaTarget(const Target& t) { targets.push_back(t); }
 void Game::simuleazaLovitura(size_t idxBird, size_t idxTarget) {
     if (idxBird >= birds.size() || idxTarget >= targets.size()) return;
 
+    /// Added the case for already destroyed targets
+
+    if (targets[idxTarget].getViata()==0)
+    {
+        std::cout<< "Tinta a fost distrusa deja! Incearca sa nimeresti alta tinta.\n";
+        return;
+    }
+
     const Bird& b = birds[idxBird];
     Target& t = targets[idxTarget];
 
     double rezultat = b.lanseaza(t.getPozitie());
-    std::cout << b.getNume() << " loveste tinta cu forta efectivt: " << rezultat << "\n";
+    std::cout << b.getNume() << " loveste tinta cu forta efectiv: " << rezultat << "\n";
     t.esteLovit(rezultat);
 
     if (t.esteDistrus())
