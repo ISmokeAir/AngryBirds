@@ -117,6 +117,9 @@ void Game::folosesteFunctiiPentruCppcheck() const {
     (void)nume;
     bool lovit = t.esteLovit(1.0);
     (void)lovit;
+    Game copia = *this;
+    copia.simulareAutomata();
+    copia.reset();
 }
 
 std::ostream& operator<<(std::ostream& os, const Game& g) {
