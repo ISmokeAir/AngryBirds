@@ -1,10 +1,3 @@
-//
-// Created by matei on 10/28/2025.
-//
-
-#ifndef OOP_TARGET_H
-#define OOP_TARGET_H
-
 #pragma once
 #include <ostream>
 #include "Vector2D.h"
@@ -15,9 +8,14 @@ private:
     Vector2D pozitie;
 
 public:
-    // Constructor cu parametri — explicit pentru a evita conversii implicite
+
     explicit Target(int viata = 100, const Vector2D& poz = Vector2D())
         : viata(viata), pozitie(poz) {}
+
+    Target(const Target&) = default;
+    Target& operator=(const Target&) = default;
+    ~Target() = default;
+
 
     bool esteLovit(double putereLovitura) {
         if (putereLovitura > 0) {
@@ -28,7 +26,16 @@ public:
         return false;
     }
 
-    // Aceste funcții returnează informație importantă → [[nodiscard]]
+
+    void iaDamage(int damage) {
+        if (damage <= 0) return;
+        viata -= damage;
+        if (viata < 0) viata = 0;
+    }
+
+    [[nodiscard]] int getViata() const { return viata; }
+    void setViata(int v) { viata = v; if (viata < 0) viata = 0; }
+
     [[nodiscard]] bool esteDistrus() const { return viata <= 0; }
     [[nodiscard]] const Vector2D& getPozitie() const { return pozitie; }
 
@@ -37,5 +44,3 @@ public:
         return os;
     }
 };
-
-#endif //OOP_TARGET_H

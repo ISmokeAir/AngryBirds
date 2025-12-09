@@ -1,38 +1,148 @@
 #include "Game.h"
+#include <iostream>
+#include <limits>
+#include <random>
 
-void Game::adaugaBird(const Bird& b) { birds.push_back(b); }
-void Game::adaugaTarget(const Target& t) { targets.push_back(t); }
-
-void Game::simuleazaLovitura(size_t idxBird, size_t idxTarget) {
-    if (idxBird >= birds.size() || idxTarget >= targets.size()) return;
-
-    const Bird& b = birds[idxBird];
-    Target& t = targets[idxTarget];
-
-    double rezultat = b.lanseaza(t.getPozitie());
-    std::cout << b.getNume() << " loveste tinta cu forta efectivt: " << rezultat << "\n";
-    t.esteLovit(rezultat);
-
-    if (t.esteDistrus())
-        std::cout << "Tinta a fost distrusa!\n";
-    else
-        std::cout << "Tinta a ramas cu viata.\n";
-}
-size_t Game::getNumarPasari() const { return birds.size(); }
-size_t Game::getNumarTinte() const { return targets.size(); }
 
 bool Game::toateDistruse() const {
-    for (const auto& t : targets)
+    for (const auto& t : tinte)
         if (!t.esteDistrus()) return false;
     return true;
 }
 
+void Game::simuleazaLovitura(size_t idxBird, size_t idxTarget) {
+    if (idxBird >= pasari.size() || idxTarget >= tinte.size()) {
+        std::cout << "Index invalid.\n";
+        return;
+    }
+
+    double dist = pasari[idxBird].getPozitie().distanta(tinte[idxTarget].getPozitie());
+    int damage = pasari[idxBird].getPutere();
+
+
+    switch (dificultate) {
+        case Dificultate::Usor:
+            damage += 10;
+            break;
+        case Dificultate::Normal:
+            break;
+        case Dificultate::Greu:
+            damage -= 10;
+            if (damage < 1) damage = 1;
+            break;
+    }
+
+    tinte[idxTarget].iaDamage(damage);
+
+
+    actualizeazaScor(damage, dist);
+}
+
+
+void Game::actualizeazaScor(int damage, double dist) {
+
+    int bonus = static_cast<int>(damage - dist / 5.0);
+    if (bonus < 0) bonus = 0;
+    scor += bonus;
+}
+
+
+void Game::seteazaDificultate(Dificultate d) {
+    dificultate = d;
+
+
+    for (auto& t : tinte) {
+        switch (d) {
+            case Dificultate::Usor:
+                t.setViata(t.getViata() + 20);
+                break;
+            case Dificultate::Normal:
+                break;
+            case Dificultate::Greu:
+                t.setViata(t.getViata() + 50);
+                break;
+        }
+    }
+}
+
+
+bool Game::verificaIntegritate() const {
+    if (pasari.empty() || tinte.empty()) return false;
+
+    for (const auto& t : tinte)
+        if (t.getViata() < 0) return false;
+
+    return true;
+}
+
+
+std::vector<double> Game::calculeazaToateDistanțele() const {
+    std::vector<double> dist;
+
+    for (const auto& b : pasari)
+        for (const auto& t : tinte)
+            dist.push_back(b.getPozitie().distanta(t.getPozitie()));
+
+    return dist;
+}
+
+
+int Game::indiceTintaApropiata(const Vector2D& poz) const {
+    if (tinte.empty()) return -1;
+
+    double best = std::numeric_limits<double>::max();
+    int idx = -1;
+
+    for (int i = 0; i < (int)tinte.size(); i++) {
+        double d = poz.distanta(tinte[i].getPozitie());
+        if (d < best) {
+            best = d;
+            idx = i;
+        }
+    }
+    return idx;
+}
+
+
+void Game::simulareAutomata() {
+    std::cout << "[AUTO] Încep simularea...\n";
+
+    std::default_random_engine rng(std::random_device{}());
+    std::uniform_int_distribution<int> db(0, (int)pasari.size() - 1);
+    std::uniform_int_distribution<int> dt(0, (int)tinte.size() - 1);
+
+    int pasi = 0;
+
+    while (!toateDistruse() && pasi < 20) {
+        int b = db(rng);
+        int t = dt(rng);
+
+        simuleazaLovitura(b, t);
+        pasi++;
+    }
+
+    std::cout << "[AUTO] Simulare încheiată. Scor final: " << scor << "\n";
+}
+
+
+void Game::reset() {
+    pasari.clear();
+    tinte.clear();
+    scor = 0;
+    dificultate = Dificultate::Normal;
+}
+
 
 std::ostream& operator<<(std::ostream& os, const Game& g) {
-    os << "---- Joc Angry Birds ----\n";
+    os << "--- Joc Angry Birds ---\n";
+    os << "Scor: " << g.scor << "\n";
     os << "Pasari:\n";
-    for (const auto& b : g.birds) os << "  " << b << "\n";
+    for (size_t i = 0; i < g.pasari.size(); i++)
+        os << "  [" << i << "] " << g.pasari[i] << "\n";
+
     os << "Tinte:\n";
-    for (const auto& t : g.targets) os << "  " << t << "\n";
+    for (size_t i = 0; i < g.tinte.size(); i++)
+        os << "  [" << i << "] " << g.tinte[i] << "\n";
+
     return os;
 }
