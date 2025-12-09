@@ -76,7 +76,7 @@ bool Game::verificaIntegritate() const {
 }
 
 
-std::vector<double> Game::calculeazaToateDistanțele() const {
+std::vector<double> Game::calculeazaToateDistantele() const {
     std::vector<double> dist;
 
     for (const auto& b : pasari)
@@ -105,7 +105,7 @@ int Game::indiceTintaApropiata(const Vector2D& poz) const {
 
 
 void Game::simulareAutomata() {
-    std::cout << "[AUTO] Încep simularea...\n";
+    std::cout << "[AUTO] Incep simularea...\n";
 
     std::default_random_engine rng(std::random_device{}());
     std::uniform_int_distribution<int> db(0, (int)pasari.size() - 1);
@@ -121,7 +121,7 @@ void Game::simulareAutomata() {
         pasi++;
     }
 
-    std::cout << "[AUTO] Simulare încheiată. Scor final: " << scor << "\n";
+    std::cout << "[AUTO] Simulare incheiata. Scor final: " << scor << "\n";
 }
 
 

@@ -46,7 +46,7 @@ public:
     [[nodiscard]] bool verificaIntegritate() const;
 
 
-    [[nodiscard]] std::vector<double> calculeazaToateDistanțele() const;
+    [[nodiscard]] std::vector<double> calculeazaToateDistantele() const;
 
 
     [[nodiscard]] int indiceTintaApropiata(const Vector2D& poz) const;

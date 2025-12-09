@@ -14,7 +14,7 @@ private:
     double x, y;
 
 public:
-    // Constructor explicit: evită conversii implicite gen Vector2D v = 5;
+
     explicit Vector2D(double x = 0, double y = 0) : x(x), y(y) {}
 
     [[nodiscard]] double getX() const { return x; }
