@@ -3,7 +3,6 @@
 #include <limits>
 #include <random>
 
-
 bool Game::toateDistruse() const {
     for (const auto& t : tinte)
         if (!t.esteDistrus()) return false;
@@ -19,7 +18,6 @@ void Game::simuleazaLovitura(size_t idxBird, size_t idxTarget) {
     double dist = pasari[idxBird].getPozitie().distanta(tinte[idxTarget].getPozitie());
     int damage = pasari[idxBird].getPutere();
 
-
     switch (dificultate) {
         case Dificultate::Usor:
             damage += 10;
@@ -33,23 +31,17 @@ void Game::simuleazaLovitura(size_t idxBird, size_t idxTarget) {
     }
 
     tinte[idxTarget].iaDamage(damage);
-
-
     actualizeazaScor(damage, dist);
 }
 
-
-void Game::actualizeazaScor(int damage, double dist) {
-
-    int bonus = static_cast<int>(damage - dist / 5.0);
+void Game::actualizeazaScor(int damage, double distanta) {
+    int bonus = static_cast<int>(damage - distanta / 5.0);
     if (bonus < 0) bonus = 0;
     scor += bonus;
 }
 
-
 void Game::seteazaDificultate(Dificultate d) {
     dificultate = d;
-
 
     for (auto& t : tinte) {
         switch (d) {
@@ -65,7 +57,6 @@ void Game::seteazaDificultate(Dificultate d) {
     }
 }
 
-
 bool Game::verificaIntegritate() const {
     if (pasari.empty() || tinte.empty()) return false;
 
@@ -75,9 +66,9 @@ bool Game::verificaIntegritate() const {
     return true;
 }
 
-
 std::vector<double> Game::calculeazaToateDistantele() const {
     std::vector<double> dist;
+    dist.reserve(pasari.size() * tinte.size());
 
     for (const auto& b : pasari)
         for (const auto& t : tinte)
@@ -86,14 +77,13 @@ std::vector<double> Game::calculeazaToateDistantele() const {
     return dist;
 }
 
-
 int Game::indiceTintaApropiata(const Vector2D& poz) const {
     if (tinte.empty()) return -1;
 
     double best = std::numeric_limits<double>::max();
     int idx = -1;
 
-    for (int i = 0; i < (int)tinte.size(); i++) {
+    for (int i = 0; i < static_cast<int>(tinte.size()); i++) {
         double d = poz.distanta(tinte[i].getPozitie());
         if (d < best) {
             best = d;
@@ -103,13 +93,17 @@ int Game::indiceTintaApropiata(const Vector2D& poz) const {
     return idx;
 }
 
-
 void Game::simulareAutomata() {
     std::cout << "[AUTO] Incep simularea...\n";
 
+    if (pasari.empty() || tinte.empty()) {
+        std::cout << "[AUTO] Nu sunt suficiente entitati.\n";
+        return;
+    }
+
     std::default_random_engine rng(std::random_device{}());
-    std::uniform_int_distribution<int> db(0, (int)pasari.size() - 1);
-    std::uniform_int_distribution<int> dt(0, (int)tinte.size() - 1);
+    std::uniform_int_distribution<int> db(0, static_cast<int>(pasari.size()) - 1);
+    std::uniform_int_distribution<int> dt(0, static_cast<int>(tinte.size()) - 1);
 
     int pasi = 0;
 
@@ -117,13 +111,12 @@ void Game::simulareAutomata() {
         int b = db(rng);
         int t = dt(rng);
 
-        simuleazaLovitura(b, t);
+        simuleazaLovitura(static_cast<size_t>(b), static_cast<size_t>(t));
         pasi++;
     }
 
     std::cout << "[AUTO] Simulare incheiata. Scor final: " << scor << "\n";
 }
-
 
 void Game::reset() {
     pasari.clear();
@@ -132,6 +125,17 @@ void Game::reset() {
     dificultate = Dificultate::Normal;
 }
 
+void Game::debugUtilizareFunctii() const {
+    if (pasari.empty() || tinte.empty()) return;
+
+    const Bird& b = pasari.front();
+    const Target& t = tinte.front();
+
+    double put = b.lanseaza(t.getPozitie());
+    const std::string& name = b.getNume();
+
+    std::cout << "[DEBUG] Bird '" << name << "' lanseaza cu: " << put << "\n";
+}
 
 std::ostream& operator<<(std::ostream& os, const Game& g) {
     os << "--- Joc Angry Birds ---\n";
