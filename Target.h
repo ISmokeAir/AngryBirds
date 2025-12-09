@@ -16,6 +16,10 @@ public:
     Target& operator=(const Target&) = default;
     ~Target() = default;
 
+    [[nodiscard]] bool esteLovit(double putereLovitura) const {
+        if (viata <= 0) return false;
+        return putereLovitura >= viata;
+    }
 
     bool esteLovit(double putereLovitura) {
         if (putereLovitura > 0) {
