@@ -1,7 +1,3 @@
-//
-// Created by matei on 10/28/2025.
-//
-
 #ifndef OOP_BIRD_H
 #define OOP_BIRD_H
 
@@ -53,4 +49,3 @@ public:
 
 
 #endif //OOP_BIRD_H
-

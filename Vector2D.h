@@ -6,7 +6,7 @@
 #define OOP_VECTOR2D_H
 
 #pragma once
-#include <cmath>   // necesar pentru sqrt()
+#include <cmath>
 #include <ostream>
 
 class Vector2D {
