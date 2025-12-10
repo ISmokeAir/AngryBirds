@@ -3,48 +3,55 @@
 
 #include <vector>
 #include <string>
-//#include <cmath>
+//#include <iostream>
+//#include <optional>
 #include "Bird.h"
 #include "Target.h"
-
-enum class Dificultate { Usor, Normal, Greu };
+#include "Vector2D.h"
+#include "Stats.h"
 
 class Game {
+public:
+    enum class Difficulty { Easy, Normal, Hard };
+
 private:
-    std::vector<Bird> pasari;
-    std::vector<Target> tinte;
-    int scor = 0;
-    Dificultate dificultate = Dificultate::Normal;
+    std::vector<Bird> birds;
+    std::vector<Target> targets;
+
+    std::vector<Bird> initialBirds;
+    std::vector<Target> initialTargets;
+
+    int score = 0;
+    Difficulty difficulty = Difficulty::Normal;
+    Stats stats;
 
 public:
     Game() = default;
 
-    void adaugaBird(const Bird& b) { pasari.push_back(b); }
-    void adaugaTarget(const Target& t) { tinte.push_back(t); }
+    void addBird(const Bird& b);
+    void addTarget(const Target& t);
 
-    [[nodiscard]] size_t getNumarPasari() const { return pasari.size(); }
-    [[nodiscard]] size_t getNumarTinte() const { return tinte.size(); }
-    [[nodiscard]] bool toateDistruse() const;
+    [[nodiscard]] size_t getNumBirds() const { return birds.size(); }
+    [[nodiscard]] size_t getNumTargets() const { return targets.size(); }
 
-    void simuleazaLovitura(size_t idxBird, size_t idxTarget);
+    [[nodiscard]] bool allDestroyed() const;
 
-    void actualizeazaScor(int damage, double distanta);
-    [[nodiscard]] int getScor() const { return scor; }
+    void simulateShot(size_t birdIdx, size_t targetIdx);
+    void demoRun();
+    void resetToInitial();
 
-    void seteazaDificultate(Dificultate d);
-    [[nodiscard]] Dificultate getDificultate() const { return dificultate; }
+    void setDifficulty(Difficulty d);
+    [[nodiscard]] Difficulty getDifficulty() const { return difficulty; }
 
-    [[nodiscard]] bool verificaIntegritate() const;
+    void save(const std::string& filename) const;
+    void load(const std::string& filename);
 
-    [[nodiscard]] std::vector<double> calculeazaToateDistantele() const;
-    [[nodiscard]] int indiceTintaApropiata(const Vector2D& poz) const;
+    const Stats& getStats() const { return stats; }
 
-    void simulareAutomata();
-    void reset();
-
-    void folosesteFunctiiPentruCppcheck() const;
+    [[nodiscard]] std::vector<double> computeAllDistances() const;
+    [[nodiscard]] int closestTargetIndex(const Vector2D& pos) const;
 
     friend std::ostream& operator<<(std::ostream& os, const Game& g);
 };
 
-#endif
+#endif // OOP_GAME_H

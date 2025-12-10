@@ -55,6 +55,8 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         Target.h
         Game.h
         Game.cpp
+        Stats.h
+        Stats.cpp
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )

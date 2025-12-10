@@ -2,7 +2,7 @@
 #define OOP_BIRD_H
 
 #pragma once
-#include <iostream>
+//#include <iostream>
 #include <string>
 #include "Vector2D.h"
 
