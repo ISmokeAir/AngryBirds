@@ -1,133 +1,71 @@
 #include <iostream>
 #include <string>
-//#include <limits>
 #include "Game.h"
-#include "Vector2D.h"
 
-static int readInt(const std::string& prompt) {
+static int readInt(const std::string& mesaj) {
     while (true) {
-        std::cout << prompt;
+        std::cout << mesaj;
         int x;
         if (std::cin >> x) return x;
-        if (std::cin.eof()) return -1;
         std::cin.clear();
         std::string dummy;
         std::getline(std::cin, dummy);
-        std::cout << "Invalid input\n";
+        std::cout << "Input invalid! Introdu un numar.\n";
     }
-}
-
-static std::string difficultyName(Game::Difficulty d) {
-    switch (d) {
-        case Game::Difficulty::Easy: return "Easy";
-        case Game::Difficulty::Normal: return "Normal";
-        case Game::Difficulty::Hard: return "Hard";
-    }
-    return "Unknown";
 }
 
 int main() {
     Game game;
 
-    game.addBird(Bird("Red", 50, Vector2D(0,0)));
-    game.addBird(Bird("Chuck", 70, Vector2D(0,0)));
-    game.addBird(Bird("Bomb", 90, Vector2D(0,0)));
+    game.addBird(Bird("Red", 50, Vector2D(0, 0), BirdType::Red));
+    game.addBird(Bird("Chuck", 60, Vector2D(0, 0), BirdType::Chuck));
+    game.addBird(Bird("Bomb", 80, Vector2D(0, 0), BirdType::Bomb));
+    game.addBird(Bird("Terence", 90, Vector2D(0, 0), BirdType::Red));
 
-    game.addTarget(Target(80, Vector2D(20,0)));
-    game.addTarget(Target(100, Vector2D(35,0)));
-    game.addTarget(Target(120, Vector2D(50,0)));
+    game.addTarget(Target(50, Vector2D(30, 0), Material::Ice));
+    game.addTarget(Target(100, Vector2D(50, 0), Material::Wood));
+    game.addTarget(Target(100, Vector2D(70, 0), Material::Stone));
 
-    while (true) {
-        std::cout << "\nMenu:\n";
-        std::cout << "1 Play (manual)\n";
-        std::cout << "2 Demo\n";
-        std::cout << "3 Save\n";
-        std::cout << "4 Load\n";
-        std::cout << "5 Reset\n";
-        std::cout << "6 Stats (full)\n";
-        std::cout << "7 Show Game\n";
-        std::cout << "8 Set Difficulty\n";
-        std::cout << "9 Show Distances\n";
-        std::cout << "10 Closest target for bird 0\n";
-        std::cout << "11 Quit\n";
+    bool running = true;
+    while (running) {
+        std::cout << "\n--- ANGRY BIRDS CPP EDITION ---\n";
+        std::cout << "1. Afiseaza Stare Joc\n";
+        std::cout << "2. Trage Manual\n";
+        std::cout << "3. Auto Simulare (Demo)\n";
+        std::cout << "4. Iesire\n";
 
-        int choice = readInt("Choice: ");
-        if (choice == -1 || choice == 11) break;
+        int choice = readInt("Alege optiunea: ");
 
         switch (choice) {
-            case 1: {
-                std::cout << game << "\n";
-                int bi = readInt("Bird idx: ");
-                int ti = readInt("Target idx: ");
-                if (bi >= 0 && ti >= 0)
-                    game.simulateShot(static_cast<size_t>(bi), static_cast<size_t>(ti));
+            case 1:
+                game.printState();
                 break;
-            }
-            case 2:
-                game.demoRun();
-                std::cout << "Demo finished\n";
-                break;
-            case 3: {
-                std::string fn;
-                std::cout << "Save filename: ";
-                std::cin >> fn;
-                try { game.save(fn); std::cout << "Saved\n"; } catch (...) { std::cout << "Save failed\n"; }
-                break;
-            }
-            case 4: {
-                std::string fn;
-                std::cout << "Load filename: ";
-                std::cin >> fn;
-                try { game.load(fn); std::cout << "Loaded\n"; } catch (...) { std::cout << "Load failed\n"; }
-                break;
-            }
-            case 5:
-                game.resetToInitial();
-                std::cout << "Reset to initial\n";
-                break;
-            case 6: {
-                std::cout << game.getStats();
-                std::cout << "Detailed stats (accessors):\n";
-                std::cout << "Total shots: " << game.getStats().getTotalShots() << "\n";
-                std::cout << "Successful shots: " << game.getStats().getSuccessfulShots() << "\n";
-                std::cout << "Total damage: " << game.getStats().getTotalDamage() << "\n";
-                std::cout << "Total distance: " << game.getStats().getTotalDistance() << "\n";
-                break;
-            }
-            case 7:
-                std::cout << game << "\n";
-                std::cout << "Num birds: " << game.getNumBirds() << ", Num targets: " << game.getNumTargets() << "\n";
-                std::cout << "Difficulty: " << difficultyName(game.getDifficulty()) << "\n";
-                break;
-            case 8: {
-                std::cout << "Set difficulty: 0 Easy, 1 Normal, 2 Hard\n";
-                int d = readInt("Choice: ");
-                if (d == 0) game.setDifficulty(Game::Difficulty::Easy);
-                else if (d == 1) game.setDifficulty(Game::Difficulty::Normal);
-                else if (d == 2) game.setDifficulty(Game::Difficulty::Hard);
-                std::cout << "Difficulty now: " << difficultyName(game.getDifficulty()) << "\n";
-                break;
-            }
-            case 9: {
-                auto all = game.computeAllDistances();
-                std::cout << "Distances count: " << all.size() << "\n";
-                for (size_t i = 0; i < all.size() && i < 10; ++i)
-                    std::cout << "d[" << i << "]=" << all[i] << "\n";
-                break;
-            }
-            case 10: {
-                if (game.getNumBirds() > 0) {
-                    int idx = game.closestTargetIndex(Bird("tmp", 0, Vector2D(0,0)).getPozitie());
-                    std::cout << "Closest target index to (0,0): " << idx << "\n";
-                } else {
-                    std::cout << "No birds available\n";
+            case 2: {
+                game.printState();
+                std::cout << "\nSelecteaza indexul pasarii si al tintei.\n";
+                int bIdx = readInt("Index Pasare: ");
+                int tIdx = readInt("Index Tinta: ");
+
+                game.simulateShot(bIdx, tIdx);
+
+                if (game.checkWin()) {
+                    std::cout << "\nFELICITARI! AI DISTRUS TOATE TINTELE!\n";
+                    running = false;
                 }
                 break;
             }
+            case 3:
+                game.demoRun();
+                if (game.checkWin()) running = false;
+                break;
+            case 4:
+                running = false;
+                break;
             default:
-                std::cout << "Unknown\n";
+                std::cout << "Optiune necunoscuta.\n";
         }
     }
 
+    std::cout << "Joc terminat. La revedere!\n";
     return 0;
 }

@@ -57,6 +57,9 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         Game.cpp
         Stats.h
         Stats.cpp
+        Target.cpp
+        Bird.cpp
+        Vector2D.cpp
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )

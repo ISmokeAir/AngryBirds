@@ -1,7 +1,3 @@
-//
-// Created by matei on 10/28/2025.
-//
-
 #ifndef OOP_VECTOR2D_H
 #define OOP_VECTOR2D_H
 

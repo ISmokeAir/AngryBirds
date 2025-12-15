@@ -2,50 +2,38 @@
 #define OOP_BIRD_H
 
 #pragma once
-//#include <iostream>
 #include <string>
+#include <iostream>
 #include "Vector2D.h"
+
+enum class BirdType {
+    Red,
+    Chuck,
+    Bomb
+};
 
 class Bird {
 private:
     std::string nume;
     int putere;
     Vector2D pozitie;
+    BirdType tip;
 
 public:
-    explicit Bird(std::string nume = "Anonim", int putere = 0, const Vector2D& poz = Vector2D())
-        : nume(std::move(nume)), putere(putere), pozitie(poz) {}
+    explicit Bird(std::string nume = "Anonim", int putere = 0, const Vector2D& poz = Vector2D(), BirdType tip = BirdType::Red);
 
+    Bird(const Bird& other);
+    Bird& operator=(const Bird& other);
+    ~Bird();
 
-    Bird(const Bird&) = default;
+    [[nodiscard]] double calculeazaImpact(const Vector2D& tinta, double vant) const;
 
+    [[nodiscard]] const std::string& getNume() const;
+    [[nodiscard]] int getPutere() const;
+    [[nodiscard]] const Vector2D& getPozitie() const;
+    [[nodiscard]] BirdType getTip() const;
 
-    Bird& operator=(const Bird&) = default;
-
-
-    ~Bird() = default;
-
-
-    [[nodiscard]] double lanseaza(const Vector2D& tinta) const {
-        double dist = pozitie.distanta(tinta);
-        return putere - dist;
-    }
-
-
-    [[nodiscard]] const std::string& getNume() const { return nume; }
-    [[nodiscard]] int getPutere() const { return putere; }
-    [[nodiscard]] const Vector2D& getPozitie() const { return pozitie; }
-
-
-    friend std::ostream& operator<<(std::ostream& os, const Bird& b) {
-        os << "Bird[" << b.nume
-           << ", putere=" << b.getPutere()
-           << ", poz=" << b.pozitie << "]";
-        return os;
-    }
-
-
+    friend std::ostream& operator<<(std::ostream& os, const Bird& b);
 };
 
-
-#endif //OOP_BIRD_H
+#endif
