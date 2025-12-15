@@ -3,7 +3,6 @@
 
 #pragma once
 #include <string>
-#include <iostream>
 #include "Vector2D.h"
 
 enum class BirdType {
@@ -15,23 +14,23 @@ enum class BirdType {
 class Bird {
 private:
     std::string nume;
-    int putere;
+    double masa;
+    double vitezaLansare;
     Vector2D pozitie;
     BirdType tip;
 
 public:
-    explicit Bird(std::string nume = "Anonim", int putere = 0, const Vector2D& poz = Vector2D(), BirdType tip = BirdType::Red);
-
+    explicit Bird(std::string nume = "Anonim", BirdType tip = BirdType::Red, const Vector2D& poz = Vector2D());
     Bird(const Bird& other);
     Bird& operator=(const Bird& other);
     ~Bird();
 
-    [[nodiscard]] double calculeazaImpact(const Vector2D& tinta, double vant) const;
+    double calculeazaMomentum(double distantaZbor, double vant) const;
 
-    [[nodiscard]] const std::string& getNume() const;
-    [[nodiscard]] int getPutere() const;
-    [[nodiscard]] const Vector2D& getPozitie() const;
-    [[nodiscard]] BirdType getTip() const;
+    const std::string& getNume() const;
+    double getMasa() const;
+    double getViteza() const;
+    const Vector2D& getPozitie() const;
 
     friend std::ostream& operator<<(std::ostream& os, const Bird& b);
 };

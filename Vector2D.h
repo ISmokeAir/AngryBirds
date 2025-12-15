@@ -7,25 +7,32 @@
 
 class Vector2D {
 private:
-    double x, y;
+    double x;
+    double y;
 
 public:
+    explicit Vector2D(double xVal = 0.0, double yVal = 0.0);
+    Vector2D(const Vector2D& other);
+    Vector2D& operator=(const Vector2D& other);
+    ~Vector2D();
 
-    explicit Vector2D(double x = 0, double y = 0) : x(x), y(y) {}
+    double getX() const;
+    double getY() const;
+    void setX(double xVal);
+    void setY(double yVal);
 
-    [[nodiscard]] double getX() const { return x; }
-    [[nodiscard]] double getY() const { return y; }
+    double distanta(const Vector2D& other) const;
+    double magnitudine() const;
+    double produsScalar(const Vector2D& other) const;
 
-    [[nodiscard]] double distanta(const Vector2D& other) const {
-        return std::sqrt((x - other.x)*(x - other.x) +
-                         (y - other.y)*(y - other.y));
-    }
+    Vector2D operator+(const Vector2D& other) const;
+    Vector2D operator-(const Vector2D& other) const;
+    Vector2D operator*(double scalar) const;
 
-    friend std::ostream& operator<<(std::ostream& os, const Vector2D& v) {
-        os << "(" << v.getX() << ", " << v.getY() << ")";
-        return os;
-    }
+    bool operator==(const Vector2D& other) const;
+    bool operator!=(const Vector2D& other) const;
 
+    friend std::ostream& operator<<(std::ostream& os, const Vector2D& v);
 };
 
-#endif //OOP_VECTOR2D_H
+#endif

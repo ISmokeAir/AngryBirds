@@ -2,7 +2,7 @@
 #include <string>
 #include "Game.h"
 
-static int readInt(const std::string& mesaj) {
+static int citesteInt(const std::string& mesaj) {
     while (true) {
         std::cout << mesaj;
         int x;
@@ -10,62 +10,68 @@ static int readInt(const std::string& mesaj) {
         std::cin.clear();
         std::string dummy;
         std::getline(std::cin, dummy);
-        std::cout << "Input invalid! Introdu un numar.\n";
+        std::cout << "Te rog introdu un numar valid.\n";
     }
 }
 
 int main() {
-    Game game;
+    Game joc;
 
-    game.addBird(Bird("Red", 50, Vector2D(0, 0), BirdType::Red));
-    game.addBird(Bird("Chuck", 60, Vector2D(0, 0), BirdType::Chuck));
-    game.addBird(Bird("Bomb", 80, Vector2D(0, 0), BirdType::Bomb));
-    game.addBird(Bird("Terence", 90, Vector2D(0, 0), BirdType::Red));
+    joc.addBird(Bird("Red", BirdType::Red, Vector2D(0, 0)));
+    joc.addBird(Bird("Chuck", BirdType::Chuck, Vector2D(0, 0)));
+    joc.addBird(Bird("Bomb", BirdType::Bomb, Vector2D(0, 0)));
+    joc.addBird(Bird("Matilda", BirdType::Red, Vector2D(0, 0)));
 
-    game.addTarget(Target(50, Vector2D(30, 0), Material::Ice));
-    game.addTarget(Target(100, Vector2D(50, 0), Material::Wood));
-    game.addTarget(Target(100, Vector2D(70, 0), Material::Stone));
+    joc.addTarget(Target(50.0, Vector2D(30, 0), Material::Ice));
+    joc.addTarget(Target(100.0, Vector2D(50, 0), Material::Wood));
+    joc.addTarget(Target(100.0, Vector2D(80, 0), Material::Stone));
 
-    bool running = true;
-    while (running) {
-        std::cout << "\n--- ANGRY BIRDS CPP EDITION ---\n";
-        std::cout << "1. Afiseaza Stare Joc\n";
-        std::cout << "2. Trage Manual\n";
-        std::cout << "3. Auto Simulare (Demo)\n";
-        std::cout << "4. Iesire\n";
+    bool ruleaza = true;
+    while (ruleaza) {
+        std::cout << "\n--- MENIU PRINCIPAL ---\n";
+        std::cout << "1. Afiseaza Harta\n";
+        std::cout << "2. Seteaza Dificultate\n";
+        std::cout << "3. Lanseaza Pasare (Manual)\n";
+        std::cout << "4. Simulare AI Avansat\n";
+        std::cout << "5. Iesire\n";
 
-        int choice = readInt("Alege optiunea: ");
+        int optiune = citesteInt("Selectie: ");
 
-        switch (choice) {
+        switch (optiune) {
             case 1:
-                game.printState();
+                joc.afiseazaStare();
                 break;
             case 2: {
-                game.printState();
-                std::cout << "\nSelecteaza indexul pasarii si al tintei.\n";
-                int bIdx = readInt("Index Pasare: ");
-                int tIdx = readInt("Index Tinta: ");
+                std::cout << "0 = Easy, 1 = Normal, 2 = Hard\n";
+                int dif = citesteInt("Alege: ");
+                if (dif == 0) joc.setDifficulty(Difficulty::Easy);
+                else if (dif == 1) joc.setDifficulty(Difficulty::Normal);
+                else if (dif == 2) joc.setDifficulty(Difficulty::Hard);
+                else std::cout << "Invalid.\n";
+                break;
+            }
+            case 3: {
+                joc.afiseazaStare();
+                int bIdx = citesteInt("Alege Pasare (index): ");
+                int tIdx = citesteInt("Alege Tinta (index): ");
+                joc.lanseazaPasare(bIdx, tIdx);
 
-                game.simulateShot(bIdx, tIdx);
-
-                if (game.checkWin()) {
-                    std::cout << "\nFELICITARI! AI DISTRUS TOATE TINTELE!\n";
-                    running = false;
+                if (joc.verificaVictorie()) {
+                    std::cout << "\nVICTORIE! Toate tintele au fost distruse!\n";
+                    ruleaza = false;
                 }
                 break;
             }
-            case 3:
-                game.demoRun();
-                if (game.checkWin()) running = false;
-                break;
             case 4:
-                running = false;
+                joc.ruleazaDemoAvansat();
+                break;
+            case 5:
+                ruleaza = false;
                 break;
             default:
-                std::cout << "Optiune necunoscuta.\n";
+                std::cout << "Optiune invalida.\n";
         }
     }
 
-    std::cout << "Joc terminat. La revedere!\n";
     return 0;
 }

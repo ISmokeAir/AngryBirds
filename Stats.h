@@ -1,22 +1,23 @@
 #ifndef OOP_STATS_H
 #define OOP_STATS_H
 
-#include <iostream>
+#pragma once
+#include <ostream>
 
 class Stats {
 private:
-    int totalShots;
-    int successfulShots;
-    double totalDamage;
+    int totalLansari;
+    int tinteLovite;
+    double damageTotal;
 
 public:
     Stats();
 
-    void addShot(bool hit, double damage);
-    void reset();
+    void inregistreazaLansare(bool lovit, double damage);
 
-    [[nodiscard]] int getShots() const;
-    [[nodiscard]] double getDamage() const;
+    int getLansari() const;
+    double getDamageTotal() const;
+    double getAcuratete() const;
 
     friend std::ostream& operator<<(std::ostream& os, const Stats& s);
 };

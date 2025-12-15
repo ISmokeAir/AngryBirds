@@ -1,138 +1,217 @@
 #include "Game.h"
 #include <iostream>
 #include <random>
+#include <vector>
 
-Game::Game() : vantCurent(0.0) {
-    genereazaVant();
+
+Game::Game() : vantCurrent(0.0), dificultate(Difficulty::Normal) {
+    this->updateVant();
 }
 
-void Game::genereazaVant() {
+void Game::updateVant() {
     static std::random_device rd;
     static std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(-5.0, 5.0);
-    vantCurent = dis(gen);
+    std::uniform_real_distribution<> dis(-10.0, 10.0);
+    this->vantCurrent = dis(gen);
 }
 
 void Game::addBird(const Bird& b) {
-    birds.push_back(b);
+    this->birds.push_back(b);
 }
 
 void Game::addTarget(const Target& t) {
-    targets.push_back(t);
+    this->targets.push_back(t);
 }
 
-void Game::simulateShot(int birdIdx, int targetIdx) {
-    if (birdIdx < 0 || birdIdx >= static_cast<int>(birds.size())) {
-        std::cout << "Eroare: Index pasare invalid!\n";
+void Game::setDifficulty(Difficulty d) {
+    this->dificultate = d;
+
+    double hpMod = 1.0;
+    double armuraMod = 1.0;
+
+    switch (this->dificultate) {
+        case Difficulty::Easy:
+            hpMod = 0.7;
+            armuraMod = 0.8;
+            break;
+        case Difficulty::Normal:
+            hpMod = 1.0;
+            armuraMod = 1.0;
+            break;
+        case Difficulty::Hard:
+            hpMod = 1.5;
+            armuraMod = 1.2;
+            break;
+    }
+
+    for (auto& t : this->targets) {
+        t.scaleazaDificultate(hpMod, armuraMod);
+    }
+
+    std::cout << "Dificultatea a fost setata. Tintele au fost modificate.\n";
+}
+
+void Game::lanseazaPasare(int birdIdx, int targetIdx) {
+    if (birdIdx < 0 || birdIdx >= static_cast<int>(this->birds.size())) {
+        std::cout << "Eroare: Pasare invalida.\n";
         return;
     }
-    if (targetIdx < 0 || targetIdx >= static_cast<int>(targets.size())) {
-        std::cout << "Eroare: Index tinta invalid!\n";
+    if (targetIdx < 0 || targetIdx >= static_cast<int>(this->targets.size())) {
+        std::cout << "Eroare: Tinta invalida.\n";
         return;
     }
 
-    if (targets[targetIdx].esteDistrus()) {
-        std::cout << "Acea tinta este deja distrusa! Alege alta.\n";
+    if (this->targets[targetIdx].esteDistrus()) {
+        std::cout << "Tinta este deja distrusa.\n";
         return;
     }
 
-    const Bird& b = birds[birdIdx];
-    Target& t = targets[targetIdx];
+    const Bird& b = this->birds[birdIdx];
+    Target& t = this->targets[targetIdx];
 
-    std::cout << "\n>>> LANSARE >>>\n";
-    std::cout << "Vantul bate cu puterea: " << vantCurent << "\n";
+    std::cout << "\n>>> FIZICA LANSARE >>>\n";
+    std::cout << "Vant: " << this->vantCurrent << " m/s\n";
+    std::cout << "Pasare: " << b.getNume() << "\n";
 
-    double impact = b.calculeazaImpact(t.getPozitie(), vantCurent);
-    bool hit = t.incaseazaDamage(impact);
+    double dist = b.getPozitie().distanta(t.getPozitie());
+    double momentum = b.calculeazaMomentum(dist, this->vantCurrent);
+
+    std::cout << "Impact Momentum: " << momentum << "\n";
+
+    bool hit = t.aplicaImpact(momentum);
 
     if (hit) {
-        std::cout << "LOVITURA REUSITA!\n";
-        std::cout << "Damage aplicat: " << impact << "\n";
-        std::cout << "Viata ramasa tinta: " << t.getViata() << "\n";
-
+        std::cout << "LOVITURA!\n";
         if (t.esteDistrus()) {
-            std::cout << "*** TINTA DISTRUSA! ***\n";
+            std::cout << "*** STRUCTURA DISTRUSA ***\n";
+        } else {
+            std::cout << "HP ramas: " << t.getIntegritate() << "\n";
         }
     } else {
-        std::cout << "RATARE! (Pasarea nu a ajuns sau lovitura prea slaba)\n";
+        std::cout << "Impact nesemnificativ.\n";
     }
-    std::cout << "------------------------\n";
 
-    stats.addShot(hit, impact);
-    genereazaVant();
+    this->stats.inregistreazaLansare(hit, momentum);
+    this->updateVant();
 }
 
-void Game::demoRun() {
-    std::cout << "\n=== PORNIRE MOD AUTO-SIMULARE ===\n";
+double Game::calculeazaScorStrategic(int birdIdx, int targetIdx) const {
+    const Bird& b = this->birds[birdIdx];
+    const Target& t = this->targets[targetIdx];
+
+    if (t.esteDistrus()) return -1.0;
+
+    double dist = b.getPozitie().distanta(t.getPozitie());
+    double damageEstimat = b.calculeazaMomentum(dist, this->vantCurrent);
+
+    double eficientaMaterial = 1.0;
+
+    if (t.getMaterial() == Material::Stone && b.getMasa() > 2.0) {
+        eficientaMaterial = 2.0;
+    } else if (t.getMaterial() == Material::Wood && b.getViteza() > 20.0) {
+        eficientaMaterial = 1.5;
+    } else if (t.getMaterial() == Material::Ice) {
+        eficientaMaterial = 1.2;
+    }
+
+    double damageReal = (damageEstimat / t.getArmura()) * eficientaMaterial;
+
+    double hpProcentual = (damageReal / t.getIntegritate()) * 100.0;
+    if (hpProcentual > 100.0) hpProcentual = 100.0;
+
+    double scor = hpProcentual * 10.0;
+
+    if (dist < 20.0) scor += 50.0;
+
+    if (damageReal >= t.getIntegritate()) {
+        scor += 500.0;
+    }
+
+    return scor;
+}
+
+void Game::ruleazaDemoAvansat() {
+    std::cout << "\n=== INITIALIZARE AI AVANSAT ===\n";
+    std::cout << "Analiza vectori vant si integritate structurala...\n";
+
+    int pasiMaxim = 20;
+    int pas = 0;
 
     static std::random_device rd;
     static std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distBird(0, static_cast<int>(birds.size()) - 1);
 
-    int incercari = 0;
-    const int MAX_INCERCARI = 15;
+    while (!this->verificaVictorie() && pas < pasiMaxim) {
+        pas++;
+        std::cout << "\n--- Pas Simulare " << pas << " ---\n";
 
-    while (!checkWin() && incercari < MAX_INCERCARI) {
-        int birdIdx = distBird(gen);
+        int bestBird = -1;
+        int bestTarget = -1;
+        double maxScore = -1.0;
 
+        std::vector<int> pasariDisponibile;
+        for(size_t i=0; i<this->birds.size(); ++i) {
+            pasariDisponibile.push_back(static_cast<int>(i));
+        }
 
-        int targetIdx = -1;
-        std::vector<int> tinteValide;
-        for(size_t i=0; i<targets.size(); ++i) {
-            if(!targets[i].esteDistrus()) {
-                tinteValide.push_back(static_cast<int>(i));
+        if (pasariDisponibile.empty()) break;
+
+        for (int bIdx : pasariDisponibile) {
+            for (size_t tIdx = 0; tIdx < this->targets.size(); ++tIdx) {
+                if (this->targets[tIdx].esteDistrus()) continue;
+
+                double score = this->calculeazaScorStrategic(bIdx, static_cast<int>(tIdx));
+
+                double variatie = std::uniform_real_distribution<>(0.9, 1.1)(gen);
+                score *= variatie;
+
+                if (score > maxScore) {
+                    maxScore = score;
+                    bestBird = bIdx;
+                    bestTarget = static_cast<int>(tIdx);
+                }
             }
         }
 
-        if (!tinteValide.empty()) {
-            std::uniform_int_distribution<> distTarget(0, static_cast<int>(tinteValide.size()) - 1);
-            targetIdx = tinteValide[distTarget(gen)];
-
-            std::cout << "[AUTO] Calculatorul a ales Pasarea " << birdIdx
-                      << " si Tinta " << targetIdx << "\n";
-            simulateShot(birdIdx, targetIdx);
+        if (bestBird != -1 && bestTarget != -1) {
+            std::cout << "[AI] Solutie Optima Identificata: Pasare " << bestBird
+                      << " -> Tinta " << bestTarget
+                      << " (Scor incredere: " << maxScore << ")\n";
+            this->lanseazaPasare(bestBird, bestTarget);
         } else {
+            std::cout << "[AI] Nu s-au gasit solutii viabile.\n";
             break;
         }
-
-        incercari++;
     }
 
-    std::cout << "=== FINAL AUTO-SIMULARE ===\n";
-    if (checkWin()) {
-        std::cout << "Calculatorul a castigat!\n";
-    } else {
-        std::cout << "Calculatorul nu a reusit sa distruga tot in " << MAX_INCERCARI << " incercari.\n";
-    }
+    std::cout << "=== FINAL SIMULARE AVANSATA ===\n";
 }
 
-bool Game::checkWin() const {
-    for (const auto& t : targets) {
+bool Game::verificaVictorie() const {
+    for (const auto& t : this->targets) {
         if (!t.esteDistrus()) return false;
     }
     return true;
 }
 
-void Game::printState() const {
+void Game::afiseazaStare() const {
     std::cout << *this;
-    std::cout << "Vant momentan: " << vantCurent << " (Negativ=Apropie, Pozitiv=Indeparteaza)\n";
 }
 
 std::ostream& operator<<(std::ostream& os, const Game& g) {
-    os << "\n=== STARE JOC ===\n";
-    os << "PASARI DISPONIBILE:\n";
+    os << "\n=== ANGRY BIRDS ENGINE v2.0 ===\n";
+    os << "Dificultate: " << static_cast<int>(g.dificultate) << "\n";
+    os << "PASARI:\n";
     for (size_t i = 0; i < g.birds.size(); ++i) {
-        os << " [" << i << "] " << g.birds[i] << "\n";
+        os << i << ": " << g.birds[i] << "\n";
     }
-    os << "\nTINTE (INAMICI):\n";
+    os << "TINTE:\n";
     for (size_t i = 0; i < g.targets.size(); ++i) {
         if (!g.targets[i].esteDistrus()) {
-            os << " [" << i << "] " << g.targets[i] << "\n";
+            os << i << ": " << g.targets[i] << "\n";
         } else {
-            os << " [" << i << "] (DISTRUSA)\n";
+            os << i << ": DISTRUSA\n";
         }
     }
-    os << "\n" << g.stats << "\n";
-    os << "=================\n";
+    os << g.stats << "\n";
     return os;
 }

@@ -1,19 +1,36 @@
 #include "Bird.h"
-#include <algorithm>
 
-Bird::Bird(std::string n, int p, const Vector2D& pos, BirdType t)
-    : nume(std::move(n)), putere(p), pozitie(pos), tip(t) {}
+Bird::Bird(std::string n, BirdType t, const Vector2D& poz)
+    : nume(std::move(n)), masa(1.0), vitezaLansare(10.0), pozitie(poz), tip(t) {
 
-Bird::Bird(const Bird& other) 
-    : nume(other.nume), putere(other.putere), pozitie(other.pozitie), tip(other.tip) {
+    switch (this->tip) {
+        case BirdType::Chuck:
+            this->masa = 0.8;
+            this->vitezaLansare = 25.0;
+            break;
+        case BirdType::Bomb:
+            this->masa = 3.0;
+            this->vitezaLansare = 12.0;
+            break;
+        case BirdType::Red:
+        default:
+            this->masa = 1.5;
+            this->vitezaLansare = 15.0;
+            break;
+    }
+}
+
+Bird::Bird(const Bird& other)
+    : nume(other.nume), masa(other.masa), vitezaLansare(other.vitezaLansare), pozitie(other.pozitie), tip(other.tip) {
 }
 
 Bird& Bird::operator=(const Bird& other) {
     if (this != &other) {
-        nume = other.nume;
-        putere = other.putere;
-        pozitie = other.pozitie;
-        tip = other.tip;
+        this->nume = other.nume;
+        this->masa = other.masa;
+        this->vitezaLansare = other.vitezaLansare;
+        this->pozitie = other.pozitie;
+        this->tip = other.tip;
     }
     return *this;
 }
@@ -21,49 +38,32 @@ Bird& Bird::operator=(const Bird& other) {
 Bird::~Bird() {
 }
 
-double Bird::calculeazaImpact(const Vector2D& tintaPos, double vant) const {
-    double dist = pozitie.distanta(tintaPos);
-    
-    double distantaEfectiva = dist;
-    if (vant != 0) {
-        distantaEfectiva -= vant;
-    }
-    if (distantaEfectiva < 0) distantaEfectiva = 0;
+double Bird::calculeazaMomentum(double distantaZbor, double vant) const {
+    double vitezaReala = this->vitezaLansare;
 
-    double damage = 0.0;
+    vitezaReala += (vant * 0.5);
 
-    switch (tip) {
-        case BirdType::Chuck:
-            if (distantaEfectiva < putere) {
-                damage = putere * 1.5;
-            } else {
-                damage = putere * 0.8;
-            }
-            break;
-        case BirdType::Bomb:
-            if (distantaEfectiva < putere * 0.5) {
-                damage = putere * 2.0;
-            } else if (distantaEfectiva < putere) {
-                damage = putere;
-            } else {
-                damage = 0.0;
-            }
-            break;
-        case BirdType::Red:
-        default:
-            double factor = 1.0 - (distantaEfectiva / (putere * 3.0));
-            if (factor < 0) factor = 0;
-            damage = putere * factor;
-            break;
+    double coeficientFrecare = 0.1;
+    if (this->tip == BirdType::Chuck) {
+        coeficientFrecare = 0.05;
     }
 
-    return damage;
+    double pierdereViteza = distantaZbor * coeficientFrecare;
+    vitezaReala -= pierdereViteza;
+
+    if (vitezaReala < 0) {
+        vitezaReala = 0;
+    }
+
+    double momentum = this->masa * vitezaReala * 10.0;
+
+    return momentum;
 }
 
-const std::string& Bird::getNume() const { return nume; }
-int Bird::getPutere() const { return putere; }
-const Vector2D& Bird::getPozitie() const { return pozitie; }
-BirdType Bird::getTip() const { return tip; }
+const std::string& Bird::getNume() const { return this->nume; }
+double Bird::getMasa() const { return this->masa; }
+double Bird::getViteza() const { return this->vitezaLansare; }
+const Vector2D& Bird::getPozitie() const { return this->pozitie; }
 
 std::ostream& operator<<(std::ostream& os, const Bird& b) {
     std::string tipStr;
@@ -72,6 +72,6 @@ std::ostream& operator<<(std::ostream& os, const Bird& b) {
         case BirdType::Chuck: tipStr = "Chuck"; break;
         case BirdType::Bomb: tipStr = "Bomb"; break;
     }
-    os << "Bird " << b.nume << " [" << tipStr << "] (P:" << b.putere << ") la " << b.pozitie;
+    os << "Bird " << b.nume << " [" << tipStr << "] (Masa:" << b.masa << "kg, V:" << b.vitezaLansare << "m/s) la " << b.pozitie;
     return os;
 }

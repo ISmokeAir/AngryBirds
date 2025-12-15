@@ -1,20 +1,28 @@
 #ifndef OOP_GAME_H
 #define OOP_GAME_H
 
+#pragma once
 #include <vector>
-#include <string>
 #include "Bird.h"
 #include "Target.h"
 #include "Stats.h"
+
+enum class Difficulty {
+    Easy,
+    Normal,
+    Hard
+};
 
 class Game {
 private:
     std::vector<Bird> birds;
     std::vector<Target> targets;
     Stats stats;
-    double vantCurent;
+    double vantCurrent;
+    Difficulty dificultate;
 
-    void genereazaVant();
+    void updateVant();
+    double calculeazaScorStrategic(int birdIdx, int targetIdx) const;
 
 public:
     Game();
@@ -22,10 +30,14 @@ public:
     void addBird(const Bird& b);
     void addTarget(const Target& t);
 
-    void simulateShot(int birdIdx, int targetIdx);
-    void demoRun();
-    bool checkWin() const;
-    void printState() const;
+    void setDifficulty(Difficulty d);
+
+    void lanseazaPasare(int birdIdx, int targetIdx);
+
+    void ruleazaDemoAvansat();
+
+    bool verificaVictorie() const;
+    void afiseazaStare() const;
 
     friend std::ostream& operator<<(std::ostream& os, const Game& g);
 };
