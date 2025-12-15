@@ -3,9 +3,36 @@
 #include <random>
 #include <vector>
 #include <algorithm>
+#include <fstream>  // Pentru scriere in fisiere
+#include <sstream>  // Pentru manipulare avansata de string-uri
+#include <iomanip>  // Pentru std::fixed si std::setprecision
 
 Game::Game() : vantCurrent(0.0), dificultate(Difficulty::Normal) {
     this->updateVant();
+    this->logActiune("Joc initializat.");
+}
+
+Game::~Game() {
+    this->logActiune("Joc inchis.");
+    this->salveazaLogPeDisk();
+}
+
+void Game::logActiune(const std::string& actiune) {
+    // Adaugam actiunea in memoria RAM
+    this->istoricActiuni.push_back(actiune);
+}
+
+void Game::salveazaLogPeDisk() const {
+    // Scriem tot istoricul intr-un fisier text (File I/O)
+    std::ofstream fisier("gamelog.txt");
+    if (fisier.is_open()) {
+        fisier << "=== JURNAL DE JOC ===\n";
+        for (const auto& linie : this->istoricActiuni) {
+            fisier << linie << "\n";
+        }
+        fisier << "=== FINAL JURNAL ===\n";
+        fisier.close();
+    }
 }
 
 void Game::updateVant() {
@@ -13,14 +40,21 @@ void Game::updateVant() {
     static std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(-10.0, 10.0);
     this->vantCurrent = dis(gen);
+
+    // Folosim stringstream pentru a construi mesajul
+    std::stringstream ss;
+    ss << "Vant actualizat la: " << std::fixed << std::setprecision(2) << this->vantCurrent;
+    this->logActiune(ss.str());
 }
 
 void Game::addBird(const Bird& b) {
     this->birds.push_back(b);
+    this->logActiune("Pasare adaugata: " + b.getNume());
 }
 
 void Game::addTarget(const Target& t) {
     this->targets.push_back(t);
+    this->logActiune("Tinta adaugata.");
 }
 
 void Game::setDifficulty(Difficulty d) {
@@ -28,19 +62,23 @@ void Game::setDifficulty(Difficulty d) {
 
     double hpMod = 1.0;
     double armuraMod = 1.0;
+    std::string diffName;
 
     switch (this->dificultate) {
         case Difficulty::Easy:
             hpMod = 0.7;
             armuraMod = 0.8;
+            diffName = "EASY";
             break;
         case Difficulty::Normal:
             hpMod = 1.0;
             armuraMod = 1.0;
+            diffName = "NORMAL";
             break;
         case Difficulty::Hard:
             hpMod = 1.5;
             armuraMod = 1.2;
+            diffName = "HARD";
             break;
     }
 
@@ -48,7 +86,48 @@ void Game::setDifficulty(Difficulty d) {
         t.scaleazaDificultate(hpMod, armuraMod);
     }
 
+    this->logActiune("Dificultate schimbata la: " + diffName);
     std::cout << "Dificultatea a fost setata. Tintele au fost modificate.\n";
+}
+
+void Game::predicteazaTraiectorie(int birdIdx, int targetIdx) const {
+    if (birdIdx < 0 || birdIdx >= static_cast<int>(this->birds.size())) return;
+    if (targetIdx < 0 || targetIdx >= static_cast<int>(this->targets.size())) return;
+
+    const Bird& b = this->birds[birdIdx];
+    const Target& t = this->targets[targetIdx];
+
+    std::cout << "\n--- CALCUL PREDICTIV TRAIECTORIE ---\n";
+    std::cout << "Pasare: " << b.getNume() << " | Vant: " << this->vantCurrent << "\n";
+
+    Vector2D start = b.getPozitie();
+    Vector2D end = t.getPozitie();
+
+    double distTotala = start.distanta(end);
+    double pasi = 10.0;
+    double stepSize = distTotala / pasi;
+
+    std::cout << "Simulare puncte intermediare:\n";
+
+    for (int i = 0; i <= static_cast<int>(pasi); ++i) {
+        double distCurenta = i * stepSize;
+
+        // Simulare efect vant: vantul impinge exponential pe masura ce distanta creste
+        double efectVant = (this->vantCurrent * 0.1) * (distCurenta / 10.0);
+
+        double xEstimat = start.getX() + distCurenta + efectVant;
+        double yEstimat = start.getY(); // Presupunem plan orizontal 2D
+
+        std::cout << "  [Pas " << i << "] Coord: ("
+                  << std::fixed << std::setprecision(2) << xEstimat << ", "
+                  << std::fixed << std::setprecision(2) << yEstimat << ")";
+
+        if (i == static_cast<int>(pasi)) {
+            std::cout << " -> PUNCT IMPACT ESTIMAT";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "------------------------------------\n";
 }
 
 void Game::lanseazaPasare(int birdIdx, int targetIdx) {
@@ -69,6 +148,10 @@ void Game::lanseazaPasare(int birdIdx, int targetIdx) {
     const Bird& b = this->birds[birdIdx];
     Target& t = this->targets[targetIdx];
 
+    std::stringstream logMsg;
+    logMsg << "Lansare: " << b.getNume() << " [Idx:" << birdIdx << "] -> Tinta [Idx:" << targetIdx << "]";
+    this->logActiune(logMsg.str());
+
     std::cout << "\n>>> FIZICA LANSARE >>>\n";
     std::cout << "Vant: " << this->vantCurrent << " m/s\n";
     std::cout << "Pasare: " << b.getNume() << "\n";
@@ -84,11 +167,14 @@ void Game::lanseazaPasare(int birdIdx, int targetIdx) {
         std::cout << "LOVITURA!\n";
         if (t.esteDistrus()) {
             std::cout << "*** STRUCTURA DISTRUSA ***\n";
+            this->logActiune("Rezultat: Tinta distrusa.");
         } else {
             std::cout << "HP ramas: " << t.getIntegritate() << "\n";
+            this->logActiune("Rezultat: Lovitura partiala.");
         }
     } else {
         std::cout << "Impact nesemnificativ.\n";
+        this->logActiune("Rezultat: Ratare.");
     }
 
     this->stats.inregistreazaLansare(hit, momentum);
@@ -101,17 +187,12 @@ double Game::calculeazaScorStrategic(int birdIdx, int targetIdx) const {
 
     if (t.esteDistrus()) return -1.0;
 
-
     Vector2D directie = t.getPozitie() - b.getPozitie();
-
-
     double dist = directie.magnitudine();
-
 
     Vector2D vantVector;
     vantVector.setX(this->vantCurrent);
     vantVector.setY(0.0);
-
 
     double influentaVant = directie.produsScalar(vantVector);
 
@@ -144,6 +225,7 @@ double Game::calculeazaScorStrategic(int birdIdx, int targetIdx) const {
 }
 
 void Game::ruleazaDemoAvansat() {
+    this->logActiune("Pornire Demo AI Avansat.");
     std::cout << "\n=== INITIALIZARE AI AVANSAT ===\n";
     std::cout << "Analiza vectori vant si integritate structurala...\n";
 
@@ -186,9 +268,13 @@ void Game::ruleazaDemoAvansat() {
         }
 
         if (bestBird != -1 && bestTarget != -1) {
-            std::cout << "[AI] Solutie Optima Identificata: Pasare " << bestBird
+            std::cout << "[AI] Solutie Optima: Pasare " << bestBird
                       << " -> Tinta " << bestTarget
-                      << " (Scor incredere: " << maxScore << ")\n";
+                      << " (Scor: " << maxScore << ")\n";
+
+            // NOU: Facem si o predictie inainte sa tragem (ca sa folosim functia noua)
+            this->predicteazaTraiectorie(bestBird, bestTarget);
+
             this->lanseazaPasare(bestBird, bestTarget);
         } else {
             std::cout << "[AI] Nu s-au gasit solutii viabile.\n";
@@ -197,6 +283,7 @@ void Game::ruleazaDemoAvansat() {
     }
 
     std::cout << "=== FINAL SIMULARE AVANSATA ===\n";
+    this->logActiune("Demo AI finalizat.");
 }
 
 bool Game::verificaVictorie() const {
@@ -211,8 +298,10 @@ void Game::afiseazaStare() const {
 }
 
 std::ostream& operator<<(std::ostream& os, const Game& g) {
-    os << "\n=== ANGRY BIRDS ENGINE v2.0 ===\n";
+    os << "\n=== ANGRY BIRDS ENGINE v3.0 (LOGGING ENABLED) ===\n";
     os << "Dificultate: " << static_cast<int>(g.dificultate) << "\n";
+    // Afisam cate intrari sunt in log, ca sa dovedim ca functioneaza
+    os << "Log Entries: " << g.istoricActiuni.size() << "\n";
     os << "PASARI:\n";
     for (size_t i = 0; i < g.birds.size(); ++i) {
         os << i << ": " << g.birds[i] << "\n";
