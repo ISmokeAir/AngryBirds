@@ -20,7 +20,7 @@ double Stats::getAcuratete() const {
 }
 
 std::ostream& operator<<(std::ostream& os, const Stats& s) {
-    os << "Statistici Sesiune: " << s.tinteLovite << "/" << s.totalLansari
-       << " lovituri reusite. Damage Total: " << s.damageTotal;
+    os << "Statistici Sesiune: " << s.tinteLovite << "/" << s.getLansari()
+       << " (" << s.getAcuratete() << "%). Damage Total: " << s.getDamageTotal();
     return os;
 }

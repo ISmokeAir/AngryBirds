@@ -69,6 +69,6 @@ bool Vector2D::operator!=(const Vector2D& other) const {
 }
 
 std::ostream& operator<<(std::ostream& os, const Vector2D& v) {
-    os << "(" << v.x << ", " << v.y << ")";
+    os << "(" << v.getX() << ", " << v.getY() << ")";
     return os;
 }

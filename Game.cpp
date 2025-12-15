@@ -2,7 +2,7 @@
 #include <iostream>
 #include <random>
 #include <vector>
-
+#include <algorithm>
 
 Game::Game() : vantCurrent(0.0), dificultate(Difficulty::Normal) {
     this->updateVant();
@@ -101,11 +101,27 @@ double Game::calculeazaScorStrategic(int birdIdx, int targetIdx) const {
 
     if (t.esteDistrus()) return -1.0;
 
-    double dist = b.getPozitie().distanta(t.getPozitie());
+
+    Vector2D directie = t.getPozitie() - b.getPozitie();
+
+
+    double dist = directie.magnitudine();
+
+
+    Vector2D vantVector;
+    vantVector.setX(this->vantCurrent);
+    vantVector.setY(0.0);
+
+
+    double influentaVant = directie.produsScalar(vantVector);
+
     double damageEstimat = b.calculeazaMomentum(dist, this->vantCurrent);
 
-    double eficientaMaterial = 1.0;
+    if (influentaVant > 0) {
+        damageEstimat *= 1.1;
+    }
 
+    double eficientaMaterial = 1.0;
     if (t.getMaterial() == Material::Stone && b.getMasa() > 2.0) {
         eficientaMaterial = 2.0;
     } else if (t.getMaterial() == Material::Wood && b.getViteza() > 20.0) {
@@ -115,14 +131,11 @@ double Game::calculeazaScorStrategic(int birdIdx, int targetIdx) const {
     }
 
     double damageReal = (damageEstimat / t.getArmura()) * eficientaMaterial;
-
     double hpProcentual = (damageReal / t.getIntegritate()) * 100.0;
     if (hpProcentual > 100.0) hpProcentual = 100.0;
 
     double scor = hpProcentual * 10.0;
-
     if (dist < 20.0) scor += 50.0;
-
     if (damageReal >= t.getIntegritate()) {
         scor += 500.0;
     }

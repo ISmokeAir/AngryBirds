@@ -100,6 +100,6 @@ std::ostream& operator<<(std::ostream& os, const Target& t) {
         case Material::Stone: matStr = "Piatra"; break;
         case Material::Ice: matStr = "Gheata"; break;
     }
-    os << "Porcusor [" << matStr << "] (Armura:" << t.factorArmura << ") HP:" << t.integritateStructura << "/" << t.integritateMaxima << " la " << t.pozitie;
+    os << "Porcusor [" << matStr << "] (Armura:" << t.factorArmura << ") HP:" << t.integritateStructura << "/" << t.getIntegritateMaxima() << " la " << t.pozitie;
     return os;
 }
