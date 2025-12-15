@@ -43,8 +43,8 @@ int main() {
 
         int optiune = citesteInt("Selectie: ");
 
+
         if (optiune == -1) {
-            ruleaza = false;
             break;
         }
 
@@ -55,6 +55,7 @@ int main() {
             case 2: {
                 std::cout << "0 = Easy, 1 = Normal, 2 = Hard\n";
                 int dif = citesteInt("Alege: ");
+
                 if (dif == -1) { ruleaza = false; break; }
 
                 if (dif == 0) joc.setDifficulty(Difficulty::Easy);
@@ -99,7 +100,6 @@ int main() {
                 std::cout << "Optiune invalida.\n";
         }
     }
-
 
     return 0;
 }
