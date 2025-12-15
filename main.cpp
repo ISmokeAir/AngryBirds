@@ -83,7 +83,6 @@ int main() {
                 joc.ruleazaDemoAvansat();
                 break;
             case 5: {
-                // NOU: Optiune de meniu pentru predictie
                 joc.afiseazaStare();
                 int bIdx = citesteInt("Pasare pentru predictie: ");
                 if (bIdx == -1) { ruleaza = false; break; }
@@ -100,6 +99,7 @@ int main() {
                 std::cout << "Optiune invalida.\n";
         }
     }
+
 
     return 0;
 }

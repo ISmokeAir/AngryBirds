@@ -22,19 +22,19 @@ private:
     double vantCurrent;
     Difficulty dificultate;
 
-    // NOU: Istoric pentru logging
+
     std::vector<std::string> istoricActiuni;
 
     void updateVant();
     double calculeazaScorStrategic(int birdIdx, int targetIdx) const;
 
-    // NOU: Functii interne pentru sistemul de logging
+
     void logActiune(const std::string& actiune);
     void salveazaLogPeDisk() const;
 
 public:
     Game();
-    ~Game(); // Destructorul va salva fisierul automat
+    ~Game();
 
     void addBird(const Bird& b);
     void addTarget(const Target& t);
@@ -43,7 +43,7 @@ public:
 
     void lanseazaPasare(int birdIdx, int targetIdx);
 
-    // NOU: Functie complexa de matematica
+
     void predicteazaTraiectorie(int birdIdx, int targetIdx) const;
 
     void ruleazaDemoAvansat();

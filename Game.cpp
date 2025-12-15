@@ -3,9 +3,9 @@
 #include <random>
 #include <vector>
 #include <algorithm>
-#include <fstream>  // Pentru scriere in fisiere
-#include <sstream>  // Pentru manipulare avansata de string-uri
-#include <iomanip>  // Pentru std::fixed si std::setprecision
+#include <fstream>
+#include <sstream>
+#include <iomanip>
 
 Game::Game() : vantCurrent(0.0), dificultate(Difficulty::Normal) {
     this->updateVant();
@@ -18,12 +18,12 @@ Game::~Game() {
 }
 
 void Game::logActiune(const std::string& actiune) {
-    // Adaugam actiunea in memoria RAM
+
     this->istoricActiuni.push_back(actiune);
 }
 
 void Game::salveazaLogPeDisk() const {
-    // Scriem tot istoricul intr-un fisier text (File I/O)
+
     std::ofstream fisier("gamelog.txt");
     if (fisier.is_open()) {
         fisier << "=== JURNAL DE JOC ===\n";
@@ -41,7 +41,7 @@ void Game::updateVant() {
     std::uniform_real_distribution<> dis(-10.0, 10.0);
     this->vantCurrent = dis(gen);
 
-    // Folosim stringstream pentru a construi mesajul
+
     std::stringstream ss;
     ss << "Vant actualizat la: " << std::fixed << std::setprecision(2) << this->vantCurrent;
     this->logActiune(ss.str());
@@ -112,11 +112,11 @@ void Game::predicteazaTraiectorie(int birdIdx, int targetIdx) const {
     for (int i = 0; i <= static_cast<int>(pasi); ++i) {
         double distCurenta = i * stepSize;
 
-        // Simulare efect vant: vantul impinge exponential pe masura ce distanta creste
+
         double efectVant = (this->vantCurrent * 0.1) * (distCurenta / 10.0);
 
         double xEstimat = start.getX() + distCurenta + efectVant;
-        double yEstimat = start.getY(); // Presupunem plan orizontal 2D
+        double yEstimat = start.getY();
 
         std::cout << "  [Pas " << i << "] Coord: ("
                   << std::fixed << std::setprecision(2) << xEstimat << ", "
@@ -272,7 +272,7 @@ void Game::ruleazaDemoAvansat() {
                       << " -> Tinta " << bestTarget
                       << " (Scor: " << maxScore << ")\n";
 
-            // NOU: Facem si o predictie inainte sa tragem (ca sa folosim functia noua)
+
             this->predicteazaTraiectorie(bestBird, bestTarget);
 
             this->lanseazaPasare(bestBird, bestTarget);
@@ -300,7 +300,7 @@ void Game::afiseazaStare() const {
 std::ostream& operator<<(std::ostream& os, const Game& g) {
     os << "\n=== ANGRY BIRDS ENGINE v3.0 (LOGGING ENABLED) ===\n";
     os << "Dificultate: " << static_cast<int>(g.dificultate) << "\n";
-    // Afisam cate intrari sunt in log, ca sa dovedim ca functioneaza
+
     os << "Log Entries: " << g.istoricActiuni.size() << "\n";
     os << "PASARI:\n";
     for (size_t i = 0; i < g.birds.size(); ++i) {
@@ -315,5 +315,6 @@ std::ostream& operator<<(std::ostream& os, const Game& g) {
         }
     }
     os << g.stats << "\n";
+
     return os;
 }
