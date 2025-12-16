@@ -12,6 +12,14 @@ void AchievementSystem::checkAchievements(double damage, bool targetDestroyed, c
         this->targetsDestroyed++;
     }
 
+    if (birdName == "Bomb" && damage > 100.0) {
+        std::string ach = "BOOM: Bomb Bird a facut prapad!";
+        if (std::find(unlockedAchievements.begin(), unlockedAchievements.end(), ach) == unlockedAchievements.end()) {
+            unlockedAchievements.push_back(ach);
+            std::cout << ">>> ACHIEVEMENT UNLOCKED: " << ach << " <<<\n";
+        }
+    }
+
     if (targetsDestroyed == 1) {
         std::string ach = "FIRST BLOOD: Prima tinta distrusa!";
         if (std::find(unlockedAchievements.begin(), unlockedAchievements.end(), ach) == unlockedAchievements.end()) {
@@ -59,5 +67,5 @@ void AchievementSystem::showAchievements() const {
 }
 
 int AchievementSystem::getScore() const {
-    return (targetsDestroyed * 100) + (totalDamageDealt / 10) + (unlockedAchievements.size() * 50);
+    return (targetsDestroyed * 100) + (totalDamageDealt / 10) + (static_cast<int>(unlockedAchievements.size()) * 50);
 }
