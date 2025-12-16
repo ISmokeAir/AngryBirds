@@ -7,54 +7,43 @@
 #include "MyBirds.h"
 #include "Target.h"
 #include "Stats.h"
+#include "AchievementSystem.h"
 
-enum class Difficulty {
-    Easy,
-    Normal,
-    Hard
-};
+enum class Difficulty { Easy, Normal, Hard };
 
 class Game {
 private:
-
     std::vector<Bird*> birds;
-
     std::vector<Target> targets;
     Stats stats;
+
+    AchievementSystem achievements;
+
     double vantCurrent;
     Difficulty dificultate;
-
-
     std::vector<std::string> istoricActiuni;
 
     void updateVant();
     double calculeazaScorStrategic(int birdIdx, int targetIdx) const;
     void logActiune(const std::string& actiune);
     void salveazaLogPeDisk() const;
-
-
     void curataMemorie();
 
 public:
     Game();
-
-
     ~Game();
     Game(const Game& other);
     Game& operator=(Game other);
     friend void swap(Game& first, Game& second) noexcept;
 
-
-
     void addBird(Bird* b);
     void addTarget(const Target& t);
-
     void setDifficulty(Difficulty d);
     void lanseazaPasare(int birdIdx, int targetIdx);
-
-
     void predicteazaTraiectorie(int birdIdx, int targetIdx) const;
     void ruleazaDemoAvansat();
+
+    void afiseazaAchievements() const;
 
     bool verificaVictorie() const;
     void afiseazaStare() const;

@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "Exceptions.h"
+#include "Utils.h"
 #include <iostream>
 #include <random>
 #include <algorithm>
@@ -9,7 +10,7 @@
 
 Game::Game() : vantCurrent(0.0), dificultate(Difficulty::Normal) {
     this->updateVant();
-    this->logActiune("Joc initializat (Tema 2).");
+    this->logActiune("Joc initializat (Enhanced Physics).");
 }
 
 Game::~Game() {
@@ -17,20 +18,18 @@ Game::~Game() {
     try {
         this->salveazaLogPeDisk();
     } catch (const std::exception& e) {
-        std::cerr << "Eroare la salvare log: " << e.what() << "\n";
+        std::cerr << "Eroare salvare log: " << e.what() << "\n";
     }
     curataMemorie();
 }
 
 void Game::curataMemorie() {
-    for (auto* b : birds) {
-        delete b;
-    }
+    for (auto* b : birds) delete b;
     birds.clear();
 }
 
 Game::Game(const Game& other)
-    : targets(other.targets), stats(other.stats),
+    : targets(other.targets), stats(other.stats), achievements(other.achievements),
       vantCurrent(other.vantCurrent), dificultate(other.dificultate),
       istoricActiuni(other.istoricActiuni) {
 
@@ -44,6 +43,7 @@ void swap(Game& first, Game& second) noexcept {
     swap(first.birds, second.birds);
     swap(first.targets, second.targets);
     swap(first.stats, second.stats);
+    swap(first.achievements, second.achievements);
     swap(first.vantCurrent, second.vantCurrent);
     swap(first.dificultate, second.dificultate);
     swap(first.istoricActiuni, second.istoricActiuni);
@@ -60,14 +60,11 @@ void Game::logActiune(const std::string& actiune) {
 
 void Game::salveazaLogPeDisk() const {
     std::ofstream fisier("gamelog.txt");
-    if (!fisier.is_open()) {
-        throw FileException("gamelog.txt");
-    }
-    fisier << "=== JURNAL JOC TEMA 2 ===\n";
-    for (const auto& linie : this->istoricActiuni) {
-        fisier << linie << "\n";
-    }
-    fisier << "=== FINAL ===\n";
+    if (!fisier.is_open()) throw FileException("gamelog.txt");
+
+    fisier << "=== LOG JOC ===\n";
+    for (const auto& linie : istoricActiuni) fisier << linie << "\n";
+    fisier << "Scor Final: " << achievements.getScore() << "\n";
     fisier.close();
 }
 
@@ -83,56 +80,53 @@ void Game::updateVant() {
 }
 
 void Game::addBird(Bird* b) {
-    if (!b) throw LogicException("Pointer nul la addBird");
+    if (!b) throw LogicException("Pointer nul addBird");
     this->birds.push_back(b);
-    this->logActiune("Adaugat pasare: " + b->getNume());
+    this->logActiune("Adaugat bird: " + b->getNume());
 }
 
 void Game::addTarget(const Target& t) {
     this->targets.push_back(t);
-    this->logActiune("Adaugat tinta.");
+    this->logActiune("Adaugat tinta");
 }
 
 void Game::setDifficulty(Difficulty d) {
     this->dificultate = d;
-    double hp = 1.0, arm = 1.0;
-    if (d == Difficulty::Easy) { hp=0.7; arm=0.8; }
-    if (d == Difficulty::Hard) { hp=1.5; arm=1.2; }
+    double hp=1.0, arm=1.0;
+    if(d==Difficulty::Easy) { hp=0.7; arm=0.8; }
+    if(d==Difficulty::Hard) { hp=1.5; arm=1.2; }
 
-    for (auto& t : this->targets) t.scaleazaDificultate(hp, arm);
-    this->logActiune("Dificultate schimbata.");
-    std::cout << "Dificultate actualizata!\n";
+    for(auto& t : targets) t.scaleazaDificultate(hp, arm);
+    this->logActiune("Dificultate setata");
+    std::cout << "Dificultate actualizata.\n";
 }
 
 void Game::predicteazaTraiectorie(int birdIdx, int targetIdx) const {
-    if (birdIdx < 0 || birdIdx >= (int)birds.size()) throw LogicException("Idx Pasare Invalid");
+    if (birdIdx < 0 || birdIdx >= (int)birds.size()) throw LogicException("Idx Bird Invalid");
     if (targetIdx < 0 || targetIdx >= (int)targets.size()) throw LogicException("Idx Tinta Invalid");
 
     const Bird* b = birds[birdIdx];
     const Target& t = targets[targetIdx];
 
-    std::cout << "\n--- PREDICTIE TRAIECTORIE ---\n";
-    std::cout << "Pasare: " << b->getNume() << " -> Tinta la " << t.getPozitie() << "\n";
-
+    std::cout << "\n--- PREDICTIE ---\n";
+    std::cout << "Calcul pentru: " << b->getNume() << "\n";
     Vector2D start = b->getPozitie();
     Vector2D end = t.getPozitie();
     double dist = start.distanta(end);
-    double step = dist / 5.0;
 
     for(int i=0; i<=5; ++i) {
-        double d = i * step;
-        double drift = (vantCurrent * 0.1) * (d/10.0);
-        std::cout << "  Pas " << i << ": x=" << (start.getX() + d + drift) << "\n";
+        double d = i * (dist/5.0);
+        double drift = (vantCurrent * 0.1) * Utils::square(d/10.0);
+        std::cout << "Pas " << i << ": Drift=" << drift << "\n";
     }
-    std::cout << "-----------------------------\n";
 }
 
 void Game::lanseazaPasare(int birdIdx, int targetIdx) {
-    if (birdIdx < 0 || birdIdx >= (int)birds.size()) throw LogicException("Idx Pasare Invalid");
+    if (birdIdx < 0 || birdIdx >= (int)birds.size()) throw LogicException("Idx Bird Invalid");
     if (targetIdx < 0 || targetIdx >= (int)targets.size()) throw LogicException("Idx Tinta Invalid");
 
     if (targets[targetIdx].esteDistrus()) {
-        std::cout << "Tinta deja distrusa!\n";
+        std::cout << "Tinta distrusa deja.\n";
         return;
     }
 
@@ -140,8 +134,8 @@ void Game::lanseazaPasare(int birdIdx, int targetIdx) {
     Target& t = targets[targetIdx];
 
     this->logActiune("Lansare: " + b->getNume());
-    std::cout << "\n>>> LANSARE: " << *b << " >>>\n";
-
+    std::cout << "\n>>> LANSARE >>>\n";
+    std::cout << "Pasare: " << *b << "\n";
 
     if (auto* bomb = dynamic_cast<BombBird*>(b)) {
         bomb->activeazaExplozie();
@@ -150,61 +144,58 @@ void Game::lanseazaPasare(int birdIdx, int targetIdx) {
     double dist = b->getPozitie().distanta(t.getPozitie());
     double mom = b->calculeazaMomentum(dist, vantCurrent);
 
-    std::cout << "Impact: " << mom << "\n";
+    std::cout << "Momentum generat: " << mom << "\n";
+
     bool hit = t.aplicaImpact(mom);
+
+    achievements.checkAchievements(mom, t.esteDistrus(), b->getNume());
+
     stats.inregistreazaLansare(hit, mom);
     updateVant();
 
-    if (hit) std::cout << "LOVITURA! HP ramas: " << t.getIntegritate() << "\n";
+    if (hit) std::cout << "LOVITURA! HP Ramas: " << t.getIntegritate() << "\n";
     else std::cout << "RATARE!\n";
+}
+
+void Game::afiseazaAchievements() const {
+    achievements.showAchievements();
 }
 
 double Game::calculeazaScorStrategic(int birdIdx, int targetIdx) const {
     const Bird* b = birds[birdIdx];
     const Target& t = targets[targetIdx];
-
     if (t.esteDistrus()) return -1.0;
 
     double dist = b->getPozitie().distanta(t.getPozitie());
-    double estDmg = b->calculeazaMomentum(dist, vantCurrent);
+    double dmg = b->calculeazaMomentum(dist, vantCurrent);
 
-
-    return (estDmg / t.getIntegritate()) * 100.0;
+    return dmg;
 }
 
-
 void Game::ruleazaDemoAvansat() {
-    std::cout << "\n=== PORNIRE DEMO AI (TEMA 2) ===\n";
-    this->logActiune("Start Demo AI");
-
-    int pasi = 0;
-    while (!verificaVictorie() && pasi < 10) {
-        pasi++;
-        std::cout << "\n--- AI Runda " << pasi << " ---\n";
+    std::cout << "\n=== DEMO AI START ===\n";
+    int steps = 0;
+    while(!verificaVictorie() && steps < 8) {
+        steps++;
+        std::cout << "Runda AI " << steps << "...\n";
 
         int bestB = -1, bestT = -1;
         double maxS = -1.0;
 
-
         for(int i=0; i<(int)birds.size(); ++i) {
             for(int j=0; j<(int)targets.size(); ++j) {
-                if (targets[j].esteDistrus()) continue;
-
+                if(targets[j].esteDistrus()) continue;
                 double s = calculeazaScorStrategic(i, j);
-                if (s > maxS) { maxS = s; bestB = i; bestT = j; }
+                if(s > maxS) { maxS = s; bestB = i; bestT = j; }
             }
         }
 
-        if (bestB != -1) {
-            std::cout << "[AI] Alege Pasarea " << bestB << " -> Tinta " << bestT << "\n";
-            predicteazaTraiectorie(bestB, bestT);
+        if(bestB != -1) {
+            std::cout << "[AI] Actioneaza...\n";
             lanseazaPasare(bestB, bestT);
-        } else {
-            std::cout << "[AI] Nu am gasit tinte valide.\n";
-            break;
-        }
+        } else break;
     }
-    std::cout << "=== DEMO FINALIZAT ===\n";
+    std::cout << "=== DEMO END ===\n";
 }
 
 bool Game::verificaVictorie() const {
@@ -212,20 +203,18 @@ bool Game::verificaVictorie() const {
     return true;
 }
 
+void Game::afiseazaStare() const {
+    std::cout << *this;
+}
+
 std::ostream& operator<<(std::ostream& os, const Game& g) {
-    os << "\n=== STARE JOC (TEMA 2) ===\n";
+    os << "\n=== STARE JOC ===\n";
     os << "Dificultate: " << (int)g.dificultate << "\n";
-
-    os << "PASARI:\n";
-    for(size_t i=0; i<g.birds.size(); ++i) {
-        os << i << ": " << *g.birds[i] << "\n";
-    }
-
-    os << "TINTE:\n";
-    for(size_t i=0; i<g.targets.size(); ++i) {
-        os << i << ": " << g.targets[i] << (g.targets[i].esteDistrus() ? " [DISTRUSA]" : "") << "\n";
-    }
-
+    os << "Pasari:\n";
+    for(size_t i=0; i<g.birds.size(); ++i) os << i << ": " << *g.birds[i] << "\n";
+    os << "Tinte:\n";
+    for(size_t i=0; i<g.targets.size(); ++i)
+        os << i << ": " << g.targets[i] << (g.targets[i].esteDistrus() ? " [X]" : "") << "\n";
     os << g.stats << "\n";
     return os;
 }

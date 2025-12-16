@@ -63,6 +63,9 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         Exceptions.h
         MyBirds.h
         MyBirds.cpp
+        Utils.h
+        AchievementSystem.h
+        AchievementSystem.cpp
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )
