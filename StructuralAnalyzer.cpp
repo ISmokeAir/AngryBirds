@@ -6,10 +6,8 @@
 
 bool StructuralAnalyzer::areConnected(const Target& t1, const Target& t2) {
     if (t1.esteDistrus() || t2.esteDistrus()) return false;
-    
     double dist = t1.getPozitie().distanta(t2.getPozitie());
-    
-    return dist < 15.0; 
+    return dist < 15.0;
 }
 
 std::vector<int> StructuralAnalyzer::checkStability(const std::vector<Target>& targets) {
@@ -21,7 +19,6 @@ std::vector<int> StructuralAnalyzer::checkStability(const std::vector<Target>& t
 
     for (int i = 0; i < n; ++i) {
         if (targets[i].esteDistrus()) continue;
-
         if (targets[i].getPozitie().getY() <= 5.0) {
             isStable[i] = true;
             q.push(i);
@@ -33,7 +30,6 @@ std::vector<int> StructuralAnalyzer::checkStability(const std::vector<Target>& t
         if (targets[i].esteDistrus()) continue;
         for (int j = i + 1; j < n; ++j) {
             if (targets[j].esteDistrus()) continue;
-            
             if (areConnected(targets[i], targets[j])) {
                 adj[i].push_back(j);
                 adj[j].push_back(i);
@@ -44,7 +40,6 @@ std::vector<int> StructuralAnalyzer::checkStability(const std::vector<Target>& t
     while (!q.empty()) {
         int curr = q.front();
         q.pop();
-
         for (int neighbor : adj[curr]) {
             if (!isStable[neighbor]) {
                 isStable[neighbor] = true;
@@ -59,7 +54,6 @@ std::vector<int> StructuralAnalyzer::checkStability(const std::vector<Target>& t
             unstableIndices.push_back(i);
         }
     }
-
     return unstableIndices;
 }
 
@@ -67,20 +61,21 @@ void StructuralAnalyzer::applyCollapseDamage(std::vector<Target>& targets, const
     if (unstableIndices.empty()) return;
 
     std::cout << "\n>>> AVERTISMENT STRUCTURAL: " << unstableIndices.size() << " blocuri instabile! <<<\n";
-    
+
     for (int idx : unstableIndices) {
         Target& t = targets[idx];
-        std::cout << "COLLAPSE: Tinta " << idx << " cade si sufera damage!\n";
-        
+
+
+        Vector2D currentPos = t.getPozitie();
+
+
+        Vector2D newPos = currentPos;
+        newPos.setY(currentPos.getY() - 10.0);
+        newPos.setX(currentPos.getX() + (idx % 2 == 0 ? 1.0 : -1.0));
+
+        std::cout << "COLLAPSE: Tinta " << idx << " cade virtual la " << newPos << "\n";
+
         double fallDamage = 50.0 + (t.getPozitie().getY() * 2.0);
         t.aplicaImpact(fallDamage);
-        
-        Vector2D oldPos = t.getPozitie();
-        double newY = oldPos.getY() - 10.0;
-        if (newY < 0) newY = 0;
-        
-        // Hack: modificam pozitia printr-un const cast sau presupunem ca Target permite modificarea
-        // Deoarece Target nu are setPozitie public, aplicam doar damage masiv
-        // Pentru nota, damage-ul e suficient sa simuleze caderea.
     }
 }

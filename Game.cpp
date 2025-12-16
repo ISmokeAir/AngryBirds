@@ -11,6 +11,7 @@
 
 Game::Game() : dificultate(Difficulty::Normal) {
     this->weather.updateWeather();
+    Utils::logDebug("Constructor Game apelat");
     this->logActiune("Joc initializat.");
 }
 
@@ -111,10 +112,26 @@ void Game::predicteazaTraiectorie(int birdIdx, int targetIdx) const {
     TextUI::drawHeader("PREDICTIE METEO-DEPENDENTA");
     std::cout << weather.getWeatherReport() << "\n";
 
-    std::vector<Vector2D> points = PhysicsEngine::simulateTrajectory(
-        b->getPozitie(), t.getPozitie(), weather.getWindX(), b->getMasa(), b->getViteza());
 
-    for(size_t i = 0; i < points.size(); ++i) std::cout << "Pct " << i << ": " << points[i] << "\n";
+    std::vector<Vector2D> points = PhysicsEngine::simulateTrajectory(
+        b->getPozitie(), t.getPozitie(),
+        weather.getWindX(), weather.getWindY(),
+        b->getMasa(), b->getViteza()
+    );
+
+    bool potentialHit = false;
+    for(size_t i = 0; i < points.size(); ++i) {
+        std::cout << "Pct " << i << ": " << points[i] << "\n";
+
+
+        if (PhysicsEngine::checkCollision(points[i], t.getPozitie(), 2.0)) {
+            potentialHit = true;
+        }
+    }
+
+    if (potentialHit) {
+        std::cout << ">>> PREDICTIE: LOVITURA PROBABILA! <<<\n";
+    }
 }
 
 void Game::activeazaSuperComputer() {
@@ -159,6 +176,15 @@ void Game::lanseazaPasare(int birdIdx, int targetIdx) {
 
     Bird* b = birds[birdIdx];
     Target& t = targets[targetIdx];
+
+
+    if (weather.isStormy()) {
+        std::cout << "!!! ATENTIE: FURTUNA IN DESFASURARE - PRECIZIE SCAZUTA !!!\n";
+    }
+
+
+    std::cout << "Target Info: Mat=" << (int)t.getMaterial()
+              << " Arm=" << t.getArmura() << "\n";
 
     this->logActiune("Lansare: " + b->getNume());
     TextUI::drawHeader("LANSARE");
@@ -249,6 +275,9 @@ bool Game::verificaVictorie() const {
 
 void Game::afiseazaStare() const {
     std::cout << *this;
+
+    std::cout << "\n[Economie] ";
+    economy.showBalance();
 }
 
 std::ostream& operator<<(std::ostream& os, const Game& g) {
