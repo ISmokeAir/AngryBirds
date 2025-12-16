@@ -8,6 +8,8 @@
 #include "Target.h"
 #include "Stats.h"
 #include "AchievementSystem.h"
+#include "Economy.h"
+#include "PhysicsEngine.h"
 
 enum class Difficulty { Easy, Normal, Hard };
 
@@ -17,6 +19,7 @@ private:
     std::vector<Target> targets;
     Stats stats;
     AchievementSystem achievements;
+    Economy economy;
 
     double vantCurrent;
     Difficulty dificultate;
@@ -38,7 +41,6 @@ public:
     void addBird(Bird* b);
     void addTarget(const Target& t);
 
-    // NOU: Functie de incarcare harta
     void loadMap(const std::vector<Target>& mapTargets);
 
     void setDifficulty(Difficulty d);
@@ -46,6 +48,9 @@ public:
     void predicteazaTraiectorie(int birdIdx, int targetIdx) const;
     void ruleazaDemoAvansat();
     void afiseazaAchievements() const;
+
+    void acceseazaMagazin();
+
     bool verificaVictorie() const;
     void afiseazaStare() const;
 

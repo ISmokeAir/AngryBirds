@@ -1,7 +1,7 @@
 #include "Game.h"
 #include "Exceptions.h"
 #include "Utils.h"
-#include "TextUI.h" // Includem TextUI
+#include "TextUI.h"
 #include <iostream>
 #include <random>
 #include <algorithm>
@@ -30,7 +30,7 @@ void Game::curataMemorie() {
 }
 
 Game::Game(const Game& other)
-    : targets(other.targets), stats(other.stats), achievements(other.achievements),
+    : targets(other.targets), stats(other.stats), achievements(other.achievements), economy(other.economy),
       vantCurrent(other.vantCurrent), dificultate(other.dificultate),
       istoricActiuni(other.istoricActiuni) {
     for (const auto* b : other.birds) {
@@ -44,6 +44,7 @@ void swap(Game& first, Game& second) noexcept {
     swap(first.targets, second.targets);
     swap(first.stats, second.stats);
     swap(first.achievements, second.achievements);
+    swap(first.economy, second.economy);
     swap(first.vantCurrent, second.vantCurrent);
     swap(first.dificultate, second.dificultate);
     swap(first.istoricActiuni, second.istoricActiuni);
@@ -64,6 +65,7 @@ void Game::salveazaLogPeDisk() const {
     fisier << "=== LOG JOC ===\n";
     for (const auto& linie : istoricActiuni) fisier << linie << "\n";
     fisier << "Scor Final: " << achievements.getScore() << "\n";
+    fisier << "Bani ramasi: " << economy.getBalance() << "\n";
     fisier.close();
 }
 
@@ -112,14 +114,17 @@ void Game::predicteazaTraiectorie(int birdIdx, int targetIdx) const {
     const Target& t = targets[targetIdx];
 
     TextUI::drawHeader("PREDICTIE TRAIECTORIE");
-    Vector2D start = b->getPozitie();
-    Vector2D end = t.getPozitie();
-    double dist = start.distanta(end);
 
-    for(int i=0; i<=5; ++i) {
-        double d = i * (dist/5.0);
-        double drift = (vantCurrent * 0.1) * Utils::square(d/10.0);
-        std::cout << "Pas " << i << ": Drift=" << drift << "\n";
+    std::vector<Vector2D> points = PhysicsEngine::simulateTrajectory(
+        b->getPozitie(),
+        t.getPozitie(),
+        vantCurrent,
+        b->getMasa(),
+        b->getViteza()
+    );
+
+    for(size_t i = 0; i < points.size(); ++i) {
+        std::cout << "Pct " << i << ": " << points[i] << "\n";
     }
 }
 
@@ -144,11 +149,19 @@ void Game::lanseazaPasare(int birdIdx, int targetIdx) {
     }
 
     double dist = b->getPozitie().distanta(t.getPozitie());
-    double mom = b->calculeazaMomentum(dist, vantCurrent);
 
-    std::cout << "Momentum generat: " << mom << "\n";
+    double mom = PhysicsEngine::calculateImpactForce(b->getMasa(), b->getViteza(), dist);
+
+    std::cout << "Forta Impact (PhysicsEngine): " << mom << "\n";
     bool hit = t.aplicaImpact(mom);
     achievements.checkAchievements(mom, t.esteDistrus(), b->getNume());
+
+    if (hit) {
+        int reward = 50;
+        if (t.esteDistrus()) reward = 150;
+        economy.addCoins(reward);
+        std::cout << "Ai castigat " << reward << " Gold!\n";
+    }
 
     stats.inregistreazaLansare(hit, mom);
     updateVant();
@@ -165,12 +178,29 @@ void Game::afiseazaAchievements() const {
     achievements.showAchievements();
 }
 
+void Game::acceseazaMagazin() {
+    bool inShop = true;
+    while (inShop) {
+        economy.showShop();
+        std::cout << "0. Iesire\nID Item de cumparat: ";
+        int opt;
+        if (!(std::cin >> opt)) {
+            std::cin.clear();
+            std::string dummy;
+            std::getline(std::cin, dummy);
+            continue;
+        }
+        if (opt == 0) inShop = false;
+        else economy.buyItem(opt);
+    }
+}
+
 double Game::calculeazaScorStrategic(int birdIdx, int targetIdx) const {
     const Bird* b = birds[birdIdx];
     const Target& t = targets[targetIdx];
     if (t.esteDistrus()) return -1.0;
     double dist = b->getPozitie().distanta(t.getPozitie());
-    return b->calculeazaMomentum(dist, vantCurrent);
+    return PhysicsEngine::calculateImpactForce(b->getMasa(), b->getViteza(), dist);
 }
 
 void Game::ruleazaDemoAvansat() {
@@ -211,6 +241,7 @@ void Game::afiseazaStare() const {
 std::ostream& operator<<(std::ostream& os, const Game& g) {
     TextUI::drawHeader("STARE JOC");
     os << "Dificultate: " << (int)g.dificultate << "\n";
+    os << "Bani: " << g.economy.getBalance() << "\n";
     os << "Pasari:\n";
     for(size_t i=0; i<g.birds.size(); ++i) os << i << ": " << *g.birds[i] << "\n";
     os << "Tinte:\n";

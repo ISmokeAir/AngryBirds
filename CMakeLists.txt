@@ -70,6 +70,10 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         MapGenerator.cpp
         TextUI.h
         TextUI.cpp
+        Economy.h
+        Economy.cpp
+        PhysicsEngine.h
+        PhysicsEngine.cpp
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )

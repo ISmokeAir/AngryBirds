@@ -29,7 +29,7 @@ int main() {
 
         bool ruleaza = true;
         while(ruleaza) {
-            TextUI::drawHeader("ANGRY BIRDS PRO (v0.3)");
+            TextUI::drawHeader("ANGRY BIRDS ULTRA (v0.4)");
             std::vector<std::string> meniu = {
                 "Afiseaza Harta",
                 "Seteaza Dificultate",
@@ -37,6 +37,7 @@ int main() {
                 "DEMO AI",
                 "Predictie",
                 "Achievement-uri",
+                "Magazin (NOU)",
                 "Genereaza Harta (Zid)",
                 "Genereaza Harta (Piramida)",
                 "Genereaza Harta (Chaos)",
@@ -69,10 +70,11 @@ int main() {
                         break;
                     }
                     case 6: joc.afiseazaAchievements(); break;
-                    case 7: joc.loadMap(MapGenerator::generateWallLevel()); break;
-                    case 8: joc.loadMap(MapGenerator::generatePyramidLevel()); break;
-                    case 9: joc.loadMap(MapGenerator::generateRandomChaos()); break;
-                    case 10: ruleaza = false; break;
+                    case 7: joc.acceseazaMagazin(); break;
+                    case 8: joc.loadMap(MapGenerator::generateWallLevel()); break;
+                    case 9: joc.loadMap(MapGenerator::generatePyramidLevel()); break;
+                    case 10: joc.loadMap(MapGenerator::generateRandomChaos()); break;
+                    case 11: ruleaza = false; break;
                     default: if(opt != -999) std::cout << "Invalid.\n";
                 }
             } catch (const GameException& e) {
