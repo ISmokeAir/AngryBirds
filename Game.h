@@ -16,7 +16,6 @@ private:
     std::vector<Bird*> birds;
     std::vector<Target> targets;
     Stats stats;
-
     AchievementSystem achievements;
 
     double vantCurrent;
@@ -38,13 +37,15 @@ public:
 
     void addBird(Bird* b);
     void addTarget(const Target& t);
+
+    // NOU: Functie de incarcare harta
+    void loadMap(const std::vector<Target>& mapTargets);
+
     void setDifficulty(Difficulty d);
     void lanseazaPasare(int birdIdx, int targetIdx);
     void predicteazaTraiectorie(int birdIdx, int targetIdx) const;
     void ruleazaDemoAvansat();
-
     void afiseazaAchievements() const;
-
     bool verificaVictorie() const;
     void afiseazaStare() const;
 

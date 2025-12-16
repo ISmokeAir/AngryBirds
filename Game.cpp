@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "Exceptions.h"
 #include "Utils.h"
+#include "TextUI.h" // Includem TextUI
 #include <iostream>
 #include <random>
 #include <algorithm>
@@ -10,7 +11,7 @@
 
 Game::Game() : vantCurrent(0.0), dificultate(Difficulty::Normal) {
     this->updateVant();
-    this->logActiune("Joc initializat (Enhanced Physics).");
+    this->logActiune("Joc initializat.");
 }
 
 Game::~Game() {
@@ -32,7 +33,6 @@ Game::Game(const Game& other)
     : targets(other.targets), stats(other.stats), achievements(other.achievements),
       vantCurrent(other.vantCurrent), dificultate(other.dificultate),
       istoricActiuni(other.istoricActiuni) {
-
     for (const auto* b : other.birds) {
         birds.push_back(b->clone());
     }
@@ -61,7 +61,6 @@ void Game::logActiune(const std::string& actiune) {
 void Game::salveazaLogPeDisk() const {
     std::ofstream fisier("gamelog.txt");
     if (!fisier.is_open()) throw FileException("gamelog.txt");
-
     fisier << "=== LOG JOC ===\n";
     for (const auto& linie : istoricActiuni) fisier << linie << "\n";
     fisier << "Scor Final: " << achievements.getScore() << "\n";
@@ -73,7 +72,6 @@ void Game::updateVant() {
     static std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(-10.0, 10.0);
     this->vantCurrent = dis(gen);
-
     std::stringstream ss;
     ss << "Vant: " << std::fixed << std::setprecision(2) << this->vantCurrent;
     this->logActiune(ss.str());
@@ -90,6 +88,12 @@ void Game::addTarget(const Target& t) {
     this->logActiune("Adaugat tinta");
 }
 
+void Game::loadMap(const std::vector<Target>& mapTargets) {
+    this->targets = mapTargets;
+    this->logActiune("Harta noua incarcata");
+    TextUI::drawHeader("HARTA NOUA GENERATA");
+}
+
 void Game::setDifficulty(Difficulty d) {
     this->dificultate = d;
     double hp=1.0, arm=1.0;
@@ -98,7 +102,6 @@ void Game::setDifficulty(Difficulty d) {
 
     for(auto& t : targets) t.scaleazaDificultate(hp, arm);
     this->logActiune("Dificultate setata");
-    std::cout << "Dificultate actualizata.\n";
 }
 
 void Game::predicteazaTraiectorie(int birdIdx, int targetIdx) const {
@@ -108,8 +111,7 @@ void Game::predicteazaTraiectorie(int birdIdx, int targetIdx) const {
     const Bird* b = birds[birdIdx];
     const Target& t = targets[targetIdx];
 
-    std::cout << "\n--- PREDICTIE ---\n";
-    std::cout << "Calcul pentru: " << b->getNume() << "\n";
+    TextUI::drawHeader("PREDICTIE TRAIECTORIE");
     Vector2D start = b->getPozitie();
     Vector2D end = t.getPozitie();
     double dist = start.distanta(end);
@@ -134,7 +136,7 @@ void Game::lanseazaPasare(int birdIdx, int targetIdx) {
     Target& t = targets[targetIdx];
 
     this->logActiune("Lansare: " + b->getNume());
-    std::cout << "\n>>> LANSARE >>>\n";
+    TextUI::drawHeader("LANSARE");
     std::cout << "Pasare: " << *b << "\n";
 
     if (auto* bomb = dynamic_cast<BombBird*>(b)) {
@@ -145,16 +147,18 @@ void Game::lanseazaPasare(int birdIdx, int targetIdx) {
     double mom = b->calculeazaMomentum(dist, vantCurrent);
 
     std::cout << "Momentum generat: " << mom << "\n";
-
     bool hit = t.aplicaImpact(mom);
-
     achievements.checkAchievements(mom, t.esteDistrus(), b->getNume());
 
     stats.inregistreazaLansare(hit, mom);
     updateVant();
 
-    if (hit) std::cout << "LOVITURA! HP Ramas: " << t.getIntegritate() << "\n";
-    else std::cout << "RATARE!\n";
+    if (hit) {
+        std::cout << "LOVITURA! HP Ramas: " << t.getIntegritate() << "\n";
+        TextUI::drawProgressBar((t.getIntegritate() / t.getIntegritateMaxima()) * 100.0);
+    } else {
+        std::cout << "RATARE!\n";
+    }
 }
 
 void Game::afiseazaAchievements() const {
@@ -165,15 +169,12 @@ double Game::calculeazaScorStrategic(int birdIdx, int targetIdx) const {
     const Bird* b = birds[birdIdx];
     const Target& t = targets[targetIdx];
     if (t.esteDistrus()) return -1.0;
-
     double dist = b->getPozitie().distanta(t.getPozitie());
-    double dmg = b->calculeazaMomentum(dist, vantCurrent);
-
-    return dmg;
+    return b->calculeazaMomentum(dist, vantCurrent);
 }
 
 void Game::ruleazaDemoAvansat() {
-    std::cout << "\n=== DEMO AI START ===\n";
+    TextUI::drawHeader("DEMO AI AUTOMAT");
     int steps = 0;
     while(!verificaVictorie() && steps < 8) {
         steps++;
@@ -208,7 +209,7 @@ void Game::afiseazaStare() const {
 }
 
 std::ostream& operator<<(std::ostream& os, const Game& g) {
-    os << "\n=== STARE JOC ===\n";
+    TextUI::drawHeader("STARE JOC");
     os << "Dificultate: " << (int)g.dificultate << "\n";
     os << "Pasari:\n";
     for(size_t i=0; i<g.birds.size(); ++i) os << i << ": " << *g.birds[i] << "\n";

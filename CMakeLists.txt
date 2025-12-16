@@ -66,6 +66,10 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         Utils.h
         AchievementSystem.h
         AchievementSystem.cpp
+        MapGenerator.h
+        MapGenerator.cpp
+        TextUI.h
+        TextUI.cpp
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )
