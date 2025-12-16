@@ -10,7 +10,10 @@
 #include "AchievementSystem.h"
 #include "Economy.h"
 #include "PhysicsEngine.h"
-#include "TrajectoryOptimizer.h" // NOU
+#include "TrajectoryOptimizer.h"
+#include "StructuralAnalyzer.h"
+#include "WeatherEngine.h"
+#include "ReplaySystem.h"
 
 enum class Difficulty { Easy, Normal, Hard };
 
@@ -21,8 +24,9 @@ private:
     Stats stats;
     AchievementSystem achievements;
     Economy economy;
+    WeatherEngine weather;
+    ReplaySystem replay;
 
-    double vantCurrent;
     Difficulty dificultate;
     std::vector<std::string> istoricActiuni;
 
@@ -43,18 +47,16 @@ public:
     void addTarget(const Target& t);
 
     void loadMap(const std::vector<Target>& mapTargets);
-
     void setDifficulty(Difficulty d);
     void lanseazaPasare(int birdIdx, int targetIdx);
     void predicteazaTraiectorie(int birdIdx, int targetIdx) const;
-
-    // NOU: Functia care apeleaza TrajectoryOptimizer
     void activeazaSuperComputer();
-
     void ruleazaDemoAvansat();
     void afiseazaAchievements() const;
-
     void acceseazaMagazin();
+    void verificaStabilitateStructura();
+
+    void ruleazaReplay();
 
     bool verificaVictorie() const;
     void afiseazaStare() const;

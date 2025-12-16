@@ -5,8 +5,7 @@
 #include "MapGenerator.h"
 #include "TextUI.h"
 
-static int citesteInt(const std::string& mesaj) {
-    std::cout << mesaj;
+static int citesteInt(const std::string&) {
     int x;
     if (!(std::cin >> x)) {
         if (std::cin.eof()) return -1;
@@ -29,20 +28,12 @@ int main() {
 
         bool ruleaza = true;
         while(ruleaza) {
-            TextUI::drawHeader("ANGRY BIRDS ULTIMATE (v0.5)");
+            TextUI::drawHeader("ANGRY BIRDS FINAL (v0.6)");
             std::vector<std::string> meniu = {
-                "Afiseaza Harta",
-                "Seteaza Dificultate",
-                "Lanseaza Pasare",
-                "DEMO AI",
-                "Predictie",
-                "Super Computer (Monte Carlo)", // NOU
-                "Achievement-uri",
-                "Magazin",
-                "Genereaza Harta (Zid)",
-                "Genereaza Harta (Piramida)",
-                "Genereaza Harta (Chaos)",
-                "Iesire"
+                "Harta", "Dificultate", "Lanseaza", "DEMO AI",
+                "Predictie", "Super Computer", "Achievements",
+                "Magazin", "Wall Map", "Pyramid Map", "Chaos Map",
+                "Replay Last Match (NOU)", "Iesire"
             };
             TextUI::drawMenu(meniu);
 
@@ -52,21 +43,15 @@ int main() {
             try {
                 switch(opt) {
                     case 1: std::cout << joc; break;
-                    case 2: {
-                        int d = citesteInt("0=Easy, 1=Normal, 2=Hard: ");
-                        if(d>=0 && d<=2) joc.setDifficulty((Difficulty)d);
-                        break;
-                    }
+                    case 2: joc.setDifficulty(Difficulty::Hard); break;
                     case 3: {
-                        int b = citesteInt("Idx Bird: ");
-                        int t = citesteInt("Idx Tinta: ");
+                        int b = citesteInt("Bird:"); int t = citesteInt("Target:");
                         joc.lanseazaPasare(b, t);
                         break;
                     }
                     case 4: joc.ruleazaDemoAvansat(); break;
                     case 5: {
-                        int b = citesteInt("Idx Bird: ");
-                        int t = citesteInt("Idx Tinta: ");
+                        int b = citesteInt("Bird:"); int t = citesteInt("Target:");
                         joc.predicteazaTraiectorie(b, t);
                         break;
                     }
@@ -76,15 +61,16 @@ int main() {
                     case 9: joc.loadMap(MapGenerator::generateWallLevel()); break;
                     case 10: joc.loadMap(MapGenerator::generatePyramidLevel()); break;
                     case 11: joc.loadMap(MapGenerator::generateRandomChaos()); break;
-                    case 12: ruleaza = false; break;
+                    case 12: joc.ruleazaReplay(); break;
+                    case 13: ruleaza = false; break;
                     default: if(opt != -999) std::cout << "Invalid.\n";
                 }
-            } catch (const GameException& e) {
-                std::cerr << "Eroare: " << e.what() << "\n";
+            } catch (const std::exception& e) {
+                std::cerr << e.what() << "\n";
             }
         }
     } catch (const std::exception& e) {
-        std::cerr << "Fatal: " << e.what() << "\n";
+        std::cerr << e.what() << "\n";
     }
     return 0;
 }

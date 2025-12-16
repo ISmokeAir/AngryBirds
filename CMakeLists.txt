@@ -76,6 +76,12 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         PhysicsEngine.cpp
         TrajectoryOptimizer.h
         TrajectoryOptimizer.cpp
+        WeatherEngine.h
+        WeatherEngine.cpp
+        ReplaySystem.h
+        ReplaySystem.cpp
+        StructuralAnalyzer.h
+        StructuralAnalyzer.cpp
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )
