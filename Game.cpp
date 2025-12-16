@@ -122,17 +122,14 @@ void Game::predicteazaTraiectorie(int birdIdx, int targetIdx) const {
     for(size_t i = 0; i < points.size(); ++i) {
         std::cout << "Pct " << i << ": " << points[i];
 
-
         if (i > 0) {
             Vector2D dir = points[i] - points[i-1];
             Vector2D windVec(weather.getWindX(), weather.getWindY());
-
             double influence = dir.produsScalar(windVec);
             if (influence < 0) std::cout << " [Vant potrivnic]";
             else std::cout << " [Vant favorabil]";
         }
         std::cout << "\n";
-
 
         if (PhysicsEngine::checkCollision(points[i], t.getPozitie(), 2.0)) {
             potentialHit = true;
@@ -198,7 +195,7 @@ void Game::lanseazaPasare(int birdIdx, int targetIdx) {
     TextUI::drawHeader("LANSARE");
     std::cout << weather.getWeatherReport() << "\n";
 
-    if (auto* bomb = dynamic_cast<BombBird*>(b)) bomb->activeazaExplozie();
+    if (const auto* bomb = dynamic_cast<const BombBird*>(b)) bomb->activeazaExplozie();
 
     double dist = b->getPozitie().distanta(t.getPozitie());
     double mom = PhysicsEngine::calculateImpactForce(b->getMasa(), b->getViteza(), dist);
@@ -271,7 +268,24 @@ void Game::ruleazaDemoAvansat() {
 
         if(bestB != -1) {
             std::cout << "AI Trage...\n";
-            lanseazaPasare(bestB, bestT);
+            SimulationResult simRes = TrajectoryOptimizer::findOptimalShot(birds[bestB], targets[bestT], weather.getWindX());
+            if (simRes.hit && simRes.score > 0) {
+                Target& t = targets[bestT];
+                Bird* b = birds[bestB];
+                std::cout << ">>> AI EXECUTA >>>\n";
+                if (const auto* bomb = dynamic_cast<const BombBird*>(b)) bomb->activeazaExplozie();
+
+                bool hit = t.aplicaImpact(simRes.score);
+                achievements.checkAchievements(simRes.score, t.esteDistrus(), "AI_BOT");
+                if(hit) {
+                     economy.addCoins(25);
+                     std::cout << "AI LOVITURA!\n";
+                }
+                updateVant();
+                verificaStabilitateStructura();
+            } else {
+                lanseazaPasare(bestB, bestT);
+            }
         } else break;
     }
 }
