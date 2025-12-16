@@ -74,6 +74,8 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         Economy.cpp
         PhysicsEngine.h
         PhysicsEngine.cpp
+        TrajectoryOptimizer.h
+        TrajectoryOptimizer.cpp
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )

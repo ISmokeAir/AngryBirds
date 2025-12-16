@@ -10,6 +10,7 @@
 #include "AchievementSystem.h"
 #include "Economy.h"
 #include "PhysicsEngine.h"
+#include "TrajectoryOptimizer.h" // NOU
 
 enum class Difficulty { Easy, Normal, Hard };
 
@@ -46,6 +47,10 @@ public:
     void setDifficulty(Difficulty d);
     void lanseazaPasare(int birdIdx, int targetIdx);
     void predicteazaTraiectorie(int birdIdx, int targetIdx) const;
+
+    // NOU: Functia care apeleaza TrajectoryOptimizer
+    void activeazaSuperComputer();
+
     void ruleazaDemoAvansat();
     void afiseazaAchievements() const;
 

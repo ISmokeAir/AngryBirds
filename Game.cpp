@@ -114,17 +114,39 @@ void Game::predicteazaTraiectorie(int birdIdx, int targetIdx) const {
     const Target& t = targets[targetIdx];
 
     TextUI::drawHeader("PREDICTIE TRAIECTORIE");
+    std::vector<Vector2D> points = PhysicsEngine::simulateTrajectory(b->getPozitie(), t.getPozitie(), vantCurrent, b->getMasa(), b->getViteza());
+    for(size_t i = 0; i < points.size(); ++i) std::cout << "Pct " << i << ": " << points[i] << "\n";
+}
 
-    std::vector<Vector2D> points = PhysicsEngine::simulateTrajectory(
-        b->getPozitie(),
-        t.getPozitie(),
-        vantCurrent,
-        b->getMasa(),
-        b->getViteza()
-    );
+void Game::activeazaSuperComputer() {
+    TextUI::drawHeader("SUPER COMPUTER: OPTIMIZARE TRAIECTORIE");
 
-    for(size_t i = 0; i < points.size(); ++i) {
-        std::cout << "Pct " << i << ": " << points[i] << "\n";
+    int bestBird = -1;
+    SimulationResult bestGlobalShot;
+    bestGlobalShot.score = -1.0;
+
+    for (int i = 0; i < (int)birds.size(); ++i) {
+        for (const auto& t : targets) {
+            if (t.esteDistrus()) continue;
+
+            std::cout << "Analizez Pasare [" << i << "] vs Tinta...\n";
+            SimulationResult res = TrajectoryOptimizer::findOptimalShot(birds[i], t, vantCurrent);
+
+            if (res.score > bestGlobalShot.score) {
+                bestGlobalShot = res;
+                bestBird = i;
+            }
+        }
+    }
+
+    if (bestBird != -1) {
+        std::cout << "\n>>> SOLUTIE OPTIMA GASITA <<<\n";
+        std::cout << "Pasare Recomandata: " << birds[bestBird]->getNume() << "\n";
+        std::cout << "Unghi Lansare: " << bestGlobalShot.angle << " grade\n";
+        std::cout << "Putere Lansare: " << bestGlobalShot.power << "%\n";
+        std::cout << "Scor Estimat: " << bestGlobalShot.score << "\n";
+    } else {
+        std::cout << "Nu s-a gasit nicio solutie viabila.\n";
     }
 }
 
@@ -149,10 +171,9 @@ void Game::lanseazaPasare(int birdIdx, int targetIdx) {
     }
 
     double dist = b->getPozitie().distanta(t.getPozitie());
-
     double mom = PhysicsEngine::calculateImpactForce(b->getMasa(), b->getViteza(), dist);
 
-    std::cout << "Forta Impact (PhysicsEngine): " << mom << "\n";
+    std::cout << "Forta Impact: " << mom << "\n";
     bool hit = t.aplicaImpact(mom);
     achievements.checkAchievements(mom, t.esteDistrus(), b->getNume());
 
@@ -182,7 +203,7 @@ void Game::acceseazaMagazin() {
     bool inShop = true;
     while (inShop) {
         economy.showShop();
-        std::cout << "0. Iesire\nID Item de cumparat: ";
+        std::cout << "0. Iesire\nID Item: ";
         int opt;
         if (!(std::cin >> opt)) {
             std::cin.clear();
@@ -204,27 +225,69 @@ double Game::calculeazaScorStrategic(int birdIdx, int targetIdx) const {
 }
 
 void Game::ruleazaDemoAvansat() {
-    TextUI::drawHeader("DEMO AI AUTOMAT");
+    TextUI::drawHeader("DEMO AI HIBRID: HEURISTIC + MONTE CARLO");
     int steps = 0;
     while(!verificaVictorie() && steps < 8) {
         steps++;
-        std::cout << "Runda AI " << steps << "...\n";
+        std::cout << "\n=== RUNDA AI " << steps << " ===\n";
 
-        int bestB = -1, bestT = -1;
-        double maxS = -1.0;
+        int bestBird = -1;
+        int bestTarget = -1;
+        double maxHeuristicScore = -1.0;
 
+        std::cout << "Faza 1: Scanare Heuristica Rapida...\n";
         for(int i=0; i<(int)birds.size(); ++i) {
             for(int j=0; j<(int)targets.size(); ++j) {
                 if(targets[j].esteDistrus()) continue;
+
                 double s = calculeazaScorStrategic(i, j);
-                if(s > maxS) { maxS = s; bestB = i; bestT = j; }
+                if (s > maxHeuristicScore) {
+                    maxHeuristicScore = s;
+                    bestBird = i;
+                    bestTarget = j;
+                }
             }
         }
 
-        if(bestB != -1) {
-            std::cout << "[AI] Actioneaza...\n";
-            lanseazaPasare(bestB, bestT);
-        } else break;
+        if(bestBird != -1) {
+            std::cout << "Candidat Identificat: Pasare " << bestBird << " -> Tinta " << bestTarget << "\n";
+            std::cout << "Scor Heuristic: " << maxHeuristicScore << "\n";
+
+            std::cout << "Faza 2: Validare Monte Carlo (Super Computer)...\n";
+
+            SimulationResult simRes = TrajectoryOptimizer::findOptimalShot(birds[bestBird], targets[bestTarget], vantCurrent);
+
+            if (simRes.hit && simRes.score > 0) {
+                std::cout << "[AI] Solutie confirmata! Unghi: " << simRes.angle << ", Putere: " << simRes.power << "\n";
+
+                this->logActiune("AI Lansare Optimizata");
+
+                Target& t = targets[bestTarget];
+                Bird* b = birds[bestBird];
+
+                std::cout << ">>> AI EXECUTA LANSAREA >>>\n";
+                if (auto* bomb = dynamic_cast<BombBird*>(b)) bomb->activeazaExplozie();
+
+                bool hit = t.aplicaImpact(simRes.score);
+                achievements.checkAchievements(simRes.score, t.esteDistrus(), "AI_BOT");
+
+                if (hit) {
+                    economy.addCoins(25);
+                    std::cout << "AI LOVITURA! HP Ramas: " << t.getIntegritate() << "\n";
+                } else {
+                    std::cout << "AI RATARE (Eroare simulare)!\n";
+                }
+
+                updateVant();
+            } else {
+                std::cout << "[AI] Validare esuata. Se incearca lansare standard...\n";
+                lanseazaPasare(bestBird, bestTarget);
+            }
+
+        } else {
+            std::cout << "[AI] Nu mai sunt tinte valide.\n";
+            break;
+        }
     }
     std::cout << "=== DEMO END ===\n";
 }
