@@ -25,17 +25,19 @@ int main() {
         joc.addBird(new ChuckBird(Vector2D(0,0)));
         joc.addBird(new BombBird(Vector2D(0,0)));
 
+        // --- INTEGRARE MATILDA (Commit Separat) ---
+        joc.addBird(new MatildaBird(Vector2D(0,0)));
+        // ------------------------------------------
+
         joc.loadMap(MapGenerator::generateClassicLevel());
 
-
         joc.addTarget(Target(50.0, Vector2D(95, 0), Material::Wood));
-
 
         std::cout << "DEBUG: Total pasari in memorie: " << Bird::getNumarTotalPasari() << "\n";
 
         bool ruleaza = true;
         while(ruleaza) {
-            TextUI::drawHeader("ANGRY BIRDS FINAL (v0.7)");
+            TextUI::drawHeader("ANGRY BIRDS FINAL (v1.0)");
             std::vector<std::string> meniu = {
                 "Afiseaza Harta", "Dificultate", "Lanseaza", "DEMO AI",
                 "Predictie", "Super Computer", "Achievements",
@@ -49,9 +51,7 @@ int main() {
 
             try {
                 switch(opt) {
-
                     case 1: joc.afiseazaStare(); break;
-
                     case 2: joc.setDifficulty(Difficulty::Hard); break;
                     case 3: {
                         int b = citesteInt("Bird:"); int t = citesteInt("Target:");
