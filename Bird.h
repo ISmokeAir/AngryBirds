@@ -3,36 +3,47 @@
 
 #pragma once
 #include <string>
+#include <iostream>
 #include "Vector2D.h"
 
-enum class BirdType {
-    Red,
-    Chuck,
-    Bomb
-};
 
 class Bird {
-private:
+protected:
     std::string nume;
     double masa;
     double vitezaLansare;
     Vector2D pozitie;
-    BirdType tip;
+
+
+    static int numarPasari;
 
 public:
-    explicit Bird(std::string nume = "Anonim", BirdType tip = BirdType::Red, const Vector2D& poz = Vector2D());
-    Bird(const Bird& other);
-    Bird& operator=(const Bird& other);
-    ~Bird();
 
-    double calculeazaMomentum(double distantaZbor, double vant) const;
+    Bird(std::string nume, double masa, double viteza, const Vector2D& poz);
 
-    const std::string& getNume() const;
-    double getMasa() const;
-    double getViteza() const;
-    const Vector2D& getPozitie() const;
+
+    virtual ~Bird();
+
+
+    [[nodiscard]] virtual double calculeazaMomentum(double distantaZbor, double vant) const = 0;
+
+
+    [[nodiscard]] virtual Bird* clone() const = 0;
+
 
     friend std::ostream& operator<<(std::ostream& os, const Bird& b);
+
+
+    const std::string& getNume() const;
+    const Vector2D& getPozitie() const;
+    double getMasa() const;
+    double getViteza() const;
+
+
+    static int getNumarTotalPasari();
+
+protected:
+    virtual void afiseaza(std::ostream& os) const;
 };
 
-#endif
+#endif //OOP_BIRD_H

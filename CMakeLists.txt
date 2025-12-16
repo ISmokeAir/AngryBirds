@@ -60,6 +60,9 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         Target.cpp
         Bird.cpp
         Vector2D.cpp
+        Exceptions.h
+        MyBirds.h
+        MyBirds.cpp
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )
