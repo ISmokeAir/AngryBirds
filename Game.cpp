@@ -112,7 +112,6 @@ void Game::predicteazaTraiectorie(int birdIdx, int targetIdx) const {
     TextUI::drawHeader("PREDICTIE METEO-DEPENDENTA");
     std::cout << weather.getWeatherReport() << "\n";
 
-
     std::vector<Vector2D> points = PhysicsEngine::simulateTrajectory(
         b->getPozitie(), t.getPozitie(),
         weather.getWindX(), weather.getWindY(),
@@ -121,7 +120,18 @@ void Game::predicteazaTraiectorie(int birdIdx, int targetIdx) const {
 
     bool potentialHit = false;
     for(size_t i = 0; i < points.size(); ++i) {
-        std::cout << "Pct " << i << ": " << points[i] << "\n";
+        std::cout << "Pct " << i << ": " << points[i];
+
+
+        if (i > 0) {
+            Vector2D dir = points[i] - points[i-1];
+            Vector2D windVec(weather.getWindX(), weather.getWindY());
+
+            double influence = dir.produsScalar(windVec);
+            if (influence < 0) std::cout << " [Vant potrivnic]";
+            else std::cout << " [Vant favorabil]";
+        }
+        std::cout << "\n";
 
 
         if (PhysicsEngine::checkCollision(points[i], t.getPozitie(), 2.0)) {
@@ -177,11 +187,9 @@ void Game::lanseazaPasare(int birdIdx, int targetIdx) {
     Bird* b = birds[birdIdx];
     Target& t = targets[targetIdx];
 
-
     if (weather.isStormy()) {
         std::cout << "!!! ATENTIE: FURTUNA IN DESFASURARE - PRECIZIE SCAZUTA !!!\n";
     }
-
 
     std::cout << "Target Info: Mat=" << (int)t.getMaterial()
               << " Arm=" << t.getArmura() << "\n";
@@ -275,7 +283,6 @@ bool Game::verificaVictorie() const {
 
 void Game::afiseazaStare() const {
     std::cout << *this;
-
     std::cout << "\n[Economie] ";
     economy.showBalance();
 }
