@@ -43,7 +43,9 @@ private:
 
 public:
     Game();
-    ~Game();
+    // FIX ERROR: Adaugat 'override' pentru a satisface Cppcheck
+    ~Game() override;
+
     Game(const Game& other);
     Game& operator=(Game other);
     friend void swap(Game& first, Game& second) noexcept;
