@@ -14,10 +14,12 @@
 #include "StructuralAnalyzer.h"
 #include "WeatherEngine.h"
 #include "ReplaySystem.h"
+#include "Observer.h"
+#include "GameContainer.h"
 
 enum class Difficulty { Easy, Normal, Hard };
 
-class Game {
+class Game : public ISubject {
 private:
     std::vector<Bird*> birds;
     std::vector<Target> targets;
@@ -28,7 +30,10 @@ private:
     ReplaySystem replay;
 
     Difficulty dificultate;
-    std::vector<std::string> istoricActiuni;
+
+    GameContainer<std::string> istoricActiuni;
+
+    std::vector<IObserver*> observers;
 
     void updateVant();
     double calculeazaScorStrategic(int birdIdx, int targetIdx) const;
@@ -42,6 +47,10 @@ public:
     Game(const Game& other);
     Game& operator=(Game other);
     friend void swap(Game& first, Game& second) noexcept;
+
+    void addObserver(IObserver* observer) override;
+    void removeObserver(IObserver* observer) override;
+    void notifyObservers(const std::string& event, double value) override;
 
     void addBird(Bird* b);
     void addTarget(const Target& t);

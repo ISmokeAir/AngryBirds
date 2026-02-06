@@ -9,8 +9,13 @@
 #include <sstream>
 #include <iomanip>
 
-Game::Game() : dificultate(Difficulty::Normal) {
+Game::Game()
+    : dificultate(Difficulty::Normal),
+      istoricActiuni(50, "Log Actiuni Joc")
+{
     this->weather.updateWeather();
+    this->addObserver(&achievements);
+
     Utils::logDebug("Constructor Game apelat");
     this->logActiune("Joc initializat.");
 }
@@ -38,6 +43,7 @@ Game::Game(const Game& other)
     for (const auto* b : other.birds) {
         birds.push_back(b->clone());
     }
+    this->addObserver(&achievements);
 }
 
 void swap(Game& first, Game& second) noexcept {
@@ -58,15 +64,36 @@ Game& Game::operator=(Game other) {
     return *this;
 }
 
+void Game::addObserver(IObserver* observer) {
+    observers.push_back(observer);
+}
+
+void Game::removeObserver(IObserver* observer) {
+    auto it = std::find(observers.begin(), observers.end(), observer);
+    if (it != observers.end()) {
+        observers.erase(it);
+    }
+}
+
+void Game::notifyObservers(const std::string& event, double value) {
+    for (auto* obs : observers) {
+        obs->onNotify(event, value);
+    }
+}
+
 void Game::logActiune(const std::string& actiune) {
-    this->istoricActiuni.push_back(actiune);
+    this->istoricActiuni.add(actiune);
 }
 
 void Game::salveazaLogPeDisk() const {
     std::ofstream fisier("gamelog.txt");
     if (!fisier.is_open()) throw FileException("gamelog.txt");
     fisier << "=== LOG JOC ===\n";
-    for (const auto& linie : istoricActiuni) fisier << linie << "\n";
+
+    for (const auto& linie : istoricActiuni) {
+        fisier << linie << "\n";
+    }
+
     fisier << "Scor Final: " << achievements.getScore() << "\n";
     fisier.close();
 }
@@ -120,24 +147,16 @@ void Game::predicteazaTraiectorie(int birdIdx, int targetIdx) const {
 
     bool potentialHit = false;
     for(size_t i = 0; i < points.size(); ++i) {
-        std::cout << "Pct " << i << ": " << points[i];
-
-        if (i > 0) {
-            Vector2D dir = points[i] - points[i-1];
-            Vector2D windVec(weather.getWindX(), weather.getWindY());
-            double influence = dir.produsScalar(windVec);
-            if (influence < 0) std::cout << " [Vant potrivnic]";
-            else std::cout << " [Vant favorabil]";
-        }
-        std::cout << "\n";
-
         if (PhysicsEngine::checkCollision(points[i], t.getPozitie(), 2.0)) {
             potentialHit = true;
+            break;
         }
     }
 
     if (potentialHit) {
         std::cout << ">>> PREDICTIE: LOVITURA PROBABILA! <<<\n";
+    } else {
+        std::cout << ">>> PREDICTIE: Sanse mici de lovire. <<<\n";
     }
 }
 
@@ -169,6 +188,8 @@ void Game::verificaStabilitateStructura() {
     if (!unstable.empty()) {
         StructuralAnalyzer::applyCollapseDamage(targets, unstable);
         this->logActiune("Colaps structural");
+
+        notifyObservers("DAMAGE_DEALT", 50.0 * unstable.size());
     }
 }
 
@@ -184,12 +205,7 @@ void Game::lanseazaPasare(int birdIdx, int targetIdx) {
     Bird* b = birds[birdIdx];
     Target& t = targets[targetIdx];
 
-    if (weather.isStormy()) {
-        std::cout << "!!! ATENTIE: FURTUNA IN DESFASURARE - PRECIZIE SCAZUTA !!!\n";
-    }
-
-    std::cout << "Target Info: Mat=" << (int)t.getMaterial()
-              << " Arm=" << t.getArmura() << "\n";
+    notifyObservers("SHOT_FIRED", 1.0);
 
     this->logActiune("Lansare: " + b->getNume());
     TextUI::drawHeader("LANSARE");
@@ -204,7 +220,12 @@ void Game::lanseazaPasare(int birdIdx, int targetIdx) {
 
     std::cout << "Forta Impact (cu Meteo): " << mom << "\n";
     bool hit = t.aplicaImpact(mom);
-    achievements.checkAchievements(mom, t.esteDistrus(), b->getNume());
+
+    notifyObservers("DAMAGE_DEALT", mom);
+    if (t.esteDistrus()) {
+        notifyObservers("TARGET_DESTROYED", 1.0);
+    }
+
     replay.recordAction(birdIdx, targetIdx, mom, t.esteDistrus());
 
     if (hit) {
@@ -276,7 +297,10 @@ void Game::ruleazaDemoAvansat() {
                 if (const auto* bomb = dynamic_cast<const BombBird*>(b)) bomb->activeazaExplozie();
 
                 bool hit = t.aplicaImpact(simRes.score);
-                achievements.checkAchievements(simRes.score, t.esteDistrus(), "AI_BOT");
+
+                notifyObservers("DAMAGE_DEALT", simRes.score);
+                if (t.esteDistrus()) notifyObservers("TARGET_DESTROYED", 1.0);
+
                 if(hit) {
                      economy.addCoins(25);
                      std::cout << "AI LOVITURA!\n";

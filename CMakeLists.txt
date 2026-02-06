@@ -82,6 +82,8 @@ add_executable(${MAIN_EXECUTABLE_NAME}
         ReplaySystem.cpp
         StructuralAnalyzer.h
         StructuralAnalyzer.cpp
+        GameContainer.h
+        Observer.h
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )

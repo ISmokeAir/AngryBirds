@@ -4,6 +4,12 @@
 #include "Exceptions.h"
 #include "MapGenerator.h"
 #include "TextUI.h"
+#include "GameContainer.h"
+
+template <typename T>
+void debugLog(const T& valoare, const std::string& mesaj) {
+    std::cout << "[DEBUG] " << mesaj << ": " << valoare << "\n";
+}
 
 static int citesteInt(const std::string& mesaj) {
     std::cout << mesaj;
@@ -20,24 +26,27 @@ static int citesteInt(const std::string& mesaj) {
 
 int main() {
     try {
+        GameContainer<int> scoruriSesiune(5, "Scoruri Recente");
+        scoruriSesiune.add(100);
+        scoruriSesiune.add(250);
+
+        debugLog(scoruriSesiune.size(), "Elemente in container scoruri");
+        debugLog(99.9, "Procent incarcare");
+
         Game joc;
         joc.addBird(new RedBird(Vector2D(0,0)));
         joc.addBird(new ChuckBird(Vector2D(0,0)));
         joc.addBird(new BombBird(Vector2D(0,0)));
-
-        // --- INTEGRARE MATILDA (Commit Separat) ---
         joc.addBird(new MatildaBird(Vector2D(0,0)));
-        // ------------------------------------------
 
         joc.loadMap(MapGenerator::generateClassicLevel());
-
         joc.addTarget(Target(50.0, Vector2D(95, 0), Material::Wood));
 
-        std::cout << "DEBUG: Total pasari in memorie: " << Bird::getNumarTotalPasari() << "\n";
+        debugLog(Bird::getNumarTotalPasari(), "Total pasari in memorie");
 
         bool ruleaza = true;
         while(ruleaza) {
-            TextUI::drawHeader("ANGRY BIRDS FINAL (v1.0)");
+            TextUI::drawHeader("ANGRY BIRDS");
             std::vector<std::string> meniu = {
                 "Afiseaza Harta", "Dificultate", "Lanseaza", "DEMO AI",
                 "Predictie", "Super Computer", "Achievements",

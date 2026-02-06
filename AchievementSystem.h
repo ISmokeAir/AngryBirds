@@ -4,18 +4,22 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <algorithm>
+#include "Observer.h"
 
-class AchievementSystem {
+class AchievementSystem : public IObserver {
 private:
     std::vector<std::string> unlockedAchievements;
     int totalDamageDealt;
     int targetsDestroyed;
     int shotsFired;
 
+    void unlock(const std::string& achName);
+
 public:
     AchievementSystem();
 
-    void checkAchievements(double damage, bool targetDestroyed, const std::string& birdName);
+    void onNotify(const std::string& event, double value) override;
 
     void showAchievements() const;
     int getScore() const;
