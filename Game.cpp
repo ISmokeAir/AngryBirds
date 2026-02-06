@@ -89,11 +89,9 @@ void Game::salveazaLogPeDisk() const {
     std::ofstream fisier("gamelog.txt");
     if (!fisier.is_open()) throw FileException("gamelog.txt");
     fisier << "=== LOG JOC ===\n";
-
     for (const auto& linie : istoricActiuni) {
         fisier << linie << "\n";
     }
-
     fisier << "Scor Final: " << achievements.getScore() << "\n";
     fisier.close();
 }
@@ -122,11 +120,22 @@ void Game::loadMap(const std::vector<Target>& mapTargets) {
 
 void Game::setDifficulty(Difficulty d) {
     this->dificultate = d;
-    double hp=1.0, arm=1.0;
-    if(d==Difficulty::Easy) { hp=0.7; arm=0.8; }
-    if(d==Difficulty::Hard) { hp=1.5; arm=1.2; }
+    double hp = 1.0;
+    double arm = 1.0;
+    std::string diffName;
+
+    switch(d) {
+        case Difficulty::Easy: hp=0.7; arm=0.8; diffName="USOR"; break;
+        case Difficulty::Normal: hp=1.0; arm=1.0; diffName="NORMAL"; break;
+        case Difficulty::Hard: hp=1.5; arm=1.2; diffName="GREU"; break;
+    }
+
     for(auto& t : targets) t.scaleazaDificultate(hp, arm);
-    this->logActiune("Dificultate setata");
+
+    std::cout << "\n>>> DIFICULTATE SCHIMBATA: " << diffName << " <<<\n";
+    std::cout << "Tintele au fost actualizate (HP x" << hp << ", Armura x" << arm << ")\n";
+
+    this->logActiune("Dificultate setata: " + diffName);
 }
 
 void Game::predicteazaTraiectorie(int birdIdx, int targetIdx) const {
@@ -188,7 +197,6 @@ void Game::verificaStabilitateStructura() {
     if (!unstable.empty()) {
         StructuralAnalyzer::applyCollapseDamage(targets, unstable);
         this->logActiune("Colaps structural");
-
         notifyObservers("DAMAGE_DEALT", 50.0 * unstable.size());
     }
 }
@@ -272,10 +280,13 @@ double Game::calculeazaScorStrategic(int birdIdx, int targetIdx) const {
 }
 
 void Game::ruleazaDemoAvansat() {
-    TextUI::drawHeader("DEMO AI");
+    TextUI::drawHeader("DEMO AI ACTIVAT");
     int steps = 0;
-    while(!verificaVictorie() && steps < 8) {
+
+    while(!verificaVictorie() && steps < 5) {
         steps++;
+        std::cout << "\n--- AI STEP " << steps << " ---\n";
+
         int bestB = -1, bestT = -1;
         double maxS = -1.0;
 
@@ -288,29 +299,39 @@ void Game::ruleazaDemoAvansat() {
         }
 
         if(bestB != -1) {
-            std::cout << "AI Trage...\n";
+            Target& t = targets[bestT];
+            Bird* b = birds[bestB];
+
+            std::cout << "AI a ales: " << b->getNume() << " -> Tinta " << bestT << "\n";
+
             SimulationResult simRes = TrajectoryOptimizer::findOptimalShot(birds[bestB], targets[bestT], weather.getWindX());
+
             if (simRes.hit && simRes.score > 0) {
-                Target& t = targets[bestT];
-                Bird* b = birds[bestB];
-                std::cout << ">>> AI EXECUTA >>>\n";
                 if (const auto* bomb = dynamic_cast<const BombBird*>(b)) bomb->activeazaExplozie();
 
                 bool hit = t.aplicaImpact(simRes.score);
 
+                std::cout << "IMPACT AI: Damage=" << simRes.score;
+                if(t.esteDistrus()) std::cout << " [DISTRUS]";
+                std::cout << "\n";
+
+                TextUI::drawProgressBar((t.getIntegritate() / t.getIntegritateMaxima()) * 100.0);
+
                 notifyObservers("DAMAGE_DEALT", simRes.score);
                 if (t.esteDistrus()) notifyObservers("TARGET_DESTROYED", 1.0);
 
-                if(hit) {
-                     economy.addCoins(25);
-                     std::cout << "AI LOVITURA!\n";
-                }
+                if(hit) economy.addCoins(25);
+
                 updateVant();
                 verificaStabilitateStructura();
             } else {
+                std::cout << "AI: Solutie slaba. Incearca lansare standard...\n";
                 lanseazaPasare(bestB, bestT);
             }
-        } else break;
+        } else {
+            std::cout << "AI: Nu gasesc tinte valide.\n";
+            break;
+        }
     }
 }
 

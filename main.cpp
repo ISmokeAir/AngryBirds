@@ -30,9 +30,6 @@ int main() {
         scoruriSesiune.add(100);
         scoruriSesiune.add(250);
 
-        debugLog(scoruriSesiune.size(), "Elemente in container scoruri");
-        debugLog(99.9, "Procent incarcare");
-
         Game joc;
         joc.addBird(new RedBird(Vector2D(0,0)));
         joc.addBird(new ChuckBird(Vector2D(0,0)));
@@ -42,13 +39,11 @@ int main() {
         joc.loadMap(MapGenerator::generateClassicLevel());
         joc.addTarget(Target(50.0, Vector2D(95, 0), Material::Wood));
 
-        debugLog(Bird::getNumarTotalPasari(), "Total pasari in memorie");
-
         bool ruleaza = true;
         while(ruleaza) {
-            TextUI::drawHeader("ANGRY BIRDS");
+            TextUI::drawHeader("ANGRY BIRDS FINAL PROJECT");
             std::vector<std::string> meniu = {
-                "Afiseaza Harta", "Dificultate", "Lanseaza", "DEMO AI",
+                "Afiseaza Harta", "Schimba Dificultate", "Lanseaza", "DEMO AI",
                 "Predictie", "Super Computer", "Achievements",
                 "Magazin", "Wall Map", "Pyramid Map", "Chaos Map",
                 "Replay Last Match", "Iesire"
@@ -61,7 +56,17 @@ int main() {
             try {
                 switch(opt) {
                     case 1: joc.afiseazaStare(); break;
-                    case 2: joc.setDifficulty(Difficulty::Hard); break;
+                    case 2: {
+                        std::cout << "\nALEGE DIFICULTATE:\n";
+                        std::cout << "1. Usor\n2. Normal\n3. Greu\nSelectie: ";
+                        int d = citesteInt("");
+                        if(d >= 1 && d <= 3) {
+                            joc.setDifficulty(static_cast<Difficulty>(d - 1));
+                        } else {
+                            std::cout << "Selectie invalida. Ramane neschimbat.\n";
+                        }
+                        break;
+                    }
                     case 3: {
                         int b = citesteInt("Bird:"); int t = citesteInt("Target:");
                         joc.lanseazaPasare(b, t);

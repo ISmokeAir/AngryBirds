@@ -15,6 +15,10 @@ void ReplaySystem::recordAction(int birdIdx, int targetIdx, double dmg, bool des
 }
 
 void ReplaySystem::saveReplayToFile(const std::string& filename) const {
+    if (steps.empty()) {
+        return;
+    }
+
     std::ofstream out(filename);
     if (!out.is_open()) return;
 
@@ -33,14 +37,14 @@ void ReplaySystem::saveReplayToFile(const std::string& filename) const {
 void ReplaySystem::loadAndPlayReplay(const std::string& filename) {
     std::ifstream in(filename);
     if (!in.is_open()) {
-        std::cout << "Nu exista fisier replay.\n";
+        std::cout << "Nu exista fisier replay valid.\n";
         return;
     }
 
     std::string line;
     std::getline(in, line);
     if (line != "REPLAY_VERSION_1.0") {
-        std::cout << "Format replay invalid.\n";
+        std::cout << "Format replay invalid sau fisier corupt.\n";
         return;
     }
 
