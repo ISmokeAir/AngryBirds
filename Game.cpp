@@ -20,7 +20,7 @@ Game::Game()
     this->logActiune("Joc initializat.");
 }
 
-Game::~Game() {
+Game::~Game() { // Destructorul marcat cu override in .h, aici e implementarea
     this->logActiune("Joc inchis.");
     try {
         this->salveazaLogPeDisk();
@@ -156,18 +156,15 @@ void Game::predicteazaTraiectorie(int birdIdx, int targetIdx) const {
 
     bool potentialHit = false;
     for(size_t i = 0; i < points.size(); ++i) {
-        // FIX ERROR: Folosim produsScalar (Vector2D)
         if (i > 0) {
             Vector2D dir = points[i] - points[i-1];
             Vector2D windVec(weather.getWindX(), weather.getWindY());
-            // Folosim functia pentru a scapa de eroarea "unused function"
             double influenta = dir.produsScalar(windVec);
             if (i % 5 == 0 && influenta < -5.0) std::cout << " [!Vant Potrivnic!]";
         }
 
         if (PhysicsEngine::checkCollision(points[i], t.getPozitie(), 2.0)) {
             potentialHit = true;
-            // break; // Scoatem break-ul ca sa vedem toata traiectoria la debug
         }
     }
     std::cout << "\n";
@@ -223,7 +220,6 @@ void Game::lanseazaPasare(int birdIdx, int targetIdx) {
     Bird* b = birds[birdIdx];
     Target& t = targets[targetIdx];
 
-    // FIX ERROR: Folosim isStormy (WeatherEngine)
     if (weather.isStormy()) {
         std::cout << "!!! AVERTISMENT METEO: Furtuna reduce precizia! !!!\n";
     }
@@ -234,7 +230,6 @@ void Game::lanseazaPasare(int birdIdx, int targetIdx) {
     TextUI::drawHeader("LANSARE");
     std::cout << weather.getWeatherReport() << "\n";
 
-    // FIX ERROR: Folosim getMaterial si getArmura (Target)
     std::cout << "Info Tinta: MatID=" << (int)t.getMaterial()
               << " | Armura=" << t.getArmura() << "\n";
 
@@ -318,7 +313,6 @@ void Game::ruleazaDemoAvansat() {
         }
 
         if(bestB != -1) {
-            Target& t = targets[bestT];
             Bird* b = birds[bestB];
 
             std::cout << "AI a ales: " << b->getNume() << " -> Tinta " << bestT << "\n";
@@ -326,6 +320,9 @@ void Game::ruleazaDemoAvansat() {
             SimulationResult simRes = TrajectoryOptimizer::findOptimalShot(birds[bestB], targets[bestT], weather.getWindX());
 
             if (simRes.hit && simRes.score > 0) {
+                // FIX ERROR: Am mutat declararea 't' aici, in scope-ul redus unde este folosita
+                Target& t = targets[bestT];
+
                 if (const auto* bomb = dynamic_cast<const BombBird*>(b)) bomb->activeazaExplozie();
 
                 bool hit = t.aplicaImpact(simRes.score);
